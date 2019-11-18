@@ -7,6 +7,7 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/home/alessio/dev/EntropyInside/src/entropy.cpp" "/home/alessio/dev/EntropyInside/build/CMakeFiles/EntropyFilter.dir/src/entropy.cpp.o"
   "/home/alessio/dev/EntropyInside/src/main.cpp" "/home/alessio/dev/EntropyInside/build/CMakeFiles/EntropyFilter.dir/src/main.cpp.o"
   "/home/alessio/dev/EntropyInside/src/pointpose.cpp" "/home/alessio/dev/EntropyInside/build/CMakeFiles/EntropyFilter.dir/src/pointpose.cpp.o"
+  "/home/alessio/dev/EntropyInside/src/segmentation.cpp" "/home/alessio/dev/EntropyInside/build/CMakeFiles/EntropyFilter.dir/src/segmentation.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

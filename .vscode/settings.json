@@ -60,6 +60,9 @@
         "string_view": "cpp",
         "hash_map": "cpp",
         "hash_set": "cpp",
-        "iterator": "cpp"
+        "iterator": "cpp",
+        "*.ipp": "cpp",
+        "core": "cpp",
+        "numericaldiff": "cpp"
     }
 }

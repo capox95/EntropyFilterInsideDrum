@@ -204,6 +204,33 @@ src/pointpose.cpp.s:
 	$(MAKE) -f CMakeFiles/EntropyFilter.dir/build.make CMakeFiles/EntropyFilter.dir/src/pointpose.cpp.s
 .PHONY : src/pointpose.cpp.s
 
+src/segmentation.o: src/segmentation.cpp.o
+
+.PHONY : src/segmentation.o
+
+# target to build an object file
+src/segmentation.cpp.o:
+	$(MAKE) -f CMakeFiles/EntropyFilter.dir/build.make CMakeFiles/EntropyFilter.dir/src/segmentation.cpp.o
+.PHONY : src/segmentation.cpp.o
+
+src/segmentation.i: src/segmentation.cpp.i
+
+.PHONY : src/segmentation.i
+
+# target to preprocess a source file
+src/segmentation.cpp.i:
+	$(MAKE) -f CMakeFiles/EntropyFilter.dir/build.make CMakeFiles/EntropyFilter.dir/src/segmentation.cpp.i
+.PHONY : src/segmentation.cpp.i
+
+src/segmentation.s: src/segmentation.cpp.s
+
+.PHONY : src/segmentation.s
+
+# target to generate assembly for a file
+src/segmentation.cpp.s:
+	$(MAKE) -f CMakeFiles/EntropyFilter.dir/build.make CMakeFiles/EntropyFilter.dir/src/segmentation.cpp.s
+.PHONY : src/segmentation.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -222,6 +249,9 @@ help:
 	@echo "... src/pointpose.o"
 	@echo "... src/pointpose.i"
 	@echo "... src/pointpose.s"
+	@echo "... src/segmentation.o"
+	@echo "... src/segmentation.i"
+	@echo "... src/segmentation.s"
 .PHONY : help
 
 

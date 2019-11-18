@@ -1,6 +1,18 @@
 #include <pcl/ModelCoefficients.h>
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
+#include <Eigen/StdVector>
+
+typedef std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d>> Affine3dVector;
+typedef std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> Vector3fVector;
+
+struct CoordinateFramePoints
+{
+    pcl::PointXYZ x;
+    pcl::PointXYZ y;
+    pcl::PointXYZ z;
+    pcl::PointXYZ o;
+};
 
 class PointPose
 {
@@ -8,21 +20,24 @@ class PointPose
 private:
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_source;
     pcl::PointCloud<pcl::PointXYZ>::Ptr m_cloud_grasp, m_cloud_projected;
-    pcl::ModelCoefficients::Ptr m_plane;
+
+    std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> m_clouds_vector;
+    std::vector<CoordinateFramePoints> m_cfp;
+    pcl::ModelCoefficients m_axis, m_plane;
+    std::vector<pcl::PointXYZ> m_pointOnAxis;
 
     Eigen::Vector3f m_trans;
     Eigen::Quaternionf m_rot;
-    std::vector<pcl::PointXYZ> m_pointsCoordinateFrame;
+
     pcl::PointXYZ m_origin;
     pcl::ModelCoefficients m_line;
 
-    Eigen::Vector3f _directionX, _directionY, _directionZ, _centroid;
+    Eigen::Vector3f _directionX, _directionY, _directionZ, centroid_centroid;
 
 public:
     PointPose() : m_source(new pcl::PointCloud<pcl::PointXYZRGB>),
                   m_cloud_grasp(new pcl::PointCloud<pcl::PointXYZ>),
-                  m_cloud_projected(new pcl::PointCloud<pcl::PointXYZ>),
-                  m_plane(new pcl::ModelCoefficients)
+                  m_cloud_projected(new pcl::PointCloud<pcl::PointXYZ>)
 
     {
     }
@@ -31,7 +46,9 @@ public:
 
     void setInputCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud);
 
-    void setRefPlane(pcl::ModelCoefficients::Ptr &plane);
+    void setDrumAxis(pcl::ModelCoefficients &axis);
+
+    void setInputVectorClouds(std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &clouds);
 
     Eigen::Vector3f getTranslation();
 
@@ -39,7 +56,10 @@ public:
 
     Eigen::Vector3f getDirectionWrinkle();
 
-    bool computeGraspPoint(Eigen::Affine3d &transformation_matrix);
+    int compute(Vector3fVector &pointsOnAxis, Affine3dVector &transformation_matrix_vector);
+
+    bool computeGraspPoint(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
+                           Eigen::Vector3f &point, Eigen::Affine3d &transformation_matrix);
 
     void visualizeGrasp();
 
@@ -48,9 +68,11 @@ private:
 
     void getCoordinateFrame(Eigen::Vector3f &centroid, Eigen::Matrix3f &rotation);
 
-    Eigen::Vector3f moveCentroid(Eigen::Vector4f centroid);
+    Eigen::Affine3d computeTransformation(Eigen::Vector3f centroid, Eigen::Vector3f directionX, Eigen::Vector3f directionZ);
 
-    void directionWrinkle();
+    void computeRefPlane(pcl::ModelCoefficients &axis, Eigen::Vector4f &centroid,
+                         pcl::ModelCoefficients &plane, pcl::PointXYZ &pointOnTheLine);
 
-    Eigen::Affine3d computeTransformation();
+    void projectPointsOntoPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, pcl::ModelCoefficients &plane,
+                                pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_projected);
 };

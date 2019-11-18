@@ -9,6 +9,7 @@
 
 #include "../include/entropy.h"
 #include "../include/pointpose.h"
+#include "../include/segmentation.h"
 
 void cloudFiltering(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud, pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud_filtered)
 {
@@ -51,59 +52,60 @@ int main(int argc, char **argv)
     }
     std::cout << "cloud orginal size: " << source->size() << std::endl;
 
-    cloudFiltering(source, source_filtered);
+    //cloudFiltering(source, source_filtered);
 
-    //------------------------------------------
-    Eigen::Vector3f basketCenter;
-    basketCenter.x() = 0.0;
-    basketCenter.y() = 0.0;
-    basketCenter.z() = 0.0;
+    SegFilter sf;
+    sf.setSourceCloud(source);
+    sf.compute();
+    sf.visualizeSeg();
 
-    Eigen::Vector3f basketAxisDir;
-    basketAxisDir.x() = 0.0205354;
-    basketAxisDir.y() = -0.631626;
-    basketAxisDir.z() = 0.521389;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr segfilter_cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+    sf.getOutputCloud(segfilter_cloud);
 
-    pcl::ModelCoefficients line;
-    std::vector<float> values = {basketCenter.x(), basketCenter.y(), basketCenter.z(),
-                                 basketAxisDir.x(), basketAxisDir.y(), basketAxisDir.z()};
-    line.values = values;
+    std::cout << segfilter_cloud->size() << std::endl;
 
-    pcl::visualization::PCLVisualizer viz("PCL filtering");
-    viz.addCoordinateSystem(0.2, "coord");
-    viz.setBackgroundColor(0.0, 0.0, 0.5);
-    viz.addPointCloud(source_filtered, "source_filtered");
-    viz.addLine(line, "line");
+    pcl::ModelCoefficients axis;
+    sf.getDrumAxis(axis);
 
-    auto startE = std::chrono::steady_clock::now();
     // ENTROPY FILTER -----------------------------------------------------------------------
     //
     EntropyFilter ef;
-    ef.setInputCloud(source_filtered);
+    ef.setInputCloud(segfilter_cloud);
     ef.setDownsampleLeafSize(0.0001); // size of the leaf for downsampling the cloud, value in meters. Default = 5 mm
     ef.setEntropyThreshold(0.5);      // Segmentation performed for all points with normalized entropy value above this
     ef.setKLocalSearch(500);          // Nearest Neighbour Local Search
-    ef.setCurvatureThreshold(0.05);   // Curvature Threshold for the computation of Entropy
-    ef.setDepthThreshold(0.25);       //0.29         // if the segment region has a value of depth lower than this -> not graspable (value in meters)
-    ef.setDrumAxis(line);
+    ef.setCurvatureThreshold(0.03);   // Curvature Threshold for the computation of Entropy
+    ef.setDepthThreshold(0.23);       //0.29         // if the segment region has a value of depth lower than this -> not graspable (value in meters)
+    ef.setDrumAxis(axis);
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_result(new pcl::PointCloud<pcl::PointXYZ>);
-    bool entropy_result = ef.compute(cloud_result);
+    std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> clouds_result;
+    bool entropy_result = ef.compute(clouds_result);
     if (entropy_result == false)
         return -1;
 
     // GRASP POINT --------------------------------------------------------------------------
+
     PointPose pp;
     pp.setSourceCloud(source);
-    pp.setInputCloud(cloud_result);
-    Eigen::Affine3d transformation;
-    pp.computeGraspPoint(transformation);
+    pp.setInputVectorClouds(clouds_result);
+    pp.setDrumAxis(axis);
 
-    //time computation
-    auto endE = std::chrono::steady_clock::now();
-    auto diff2 = endE - startE;
-    std::cout << "duration entropy filter: " << std::chrono::duration<double, std::milli>(diff2).count() << " ms" << std::endl;
+    std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d>> transformation_vector;
+    std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> points_vector;
+    int number = pp.compute(points_vector, transformation_vector);
 
+    std::cout << "---------------------------------------------- " << std::endl;
+    for (int i = 0; i < number; i++)
+    {
+        std::cout << "Transformation Matrix: \n"
+                  << transformation_vector.at(i).matrix() << std::endl;
+        std::cout << std::endl;
+        std::cout << "Point on Drum Axis: \n"
+                  << points_vector.at(i) << std::endl;
+        std::cout << "---------------------------------------------- " << std::endl;
+    }
+
+    //-------------------------------------------------------------------------------------
     pp.visualizeGrasp();
     ef.visualizeAll(false);
 

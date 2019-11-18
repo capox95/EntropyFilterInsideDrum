@@ -64,9 +64,7 @@ public:
 
     pcl::PointCloud<pcl::Normal>::Ptr getMLSNormals();
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr getCloudSeg();
-
-    bool compute(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_out);
+    bool compute(std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &clouds_out);
 
     //
     //ColorMap functions

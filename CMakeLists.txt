@@ -11,7 +11,7 @@ add_definitions(${PCL_DEFINITIONS})
 
 
 
-add_executable (EntropyFilter src/main.cpp src/entropy.cpp src/pointpose.cpp)
+add_executable (EntropyFilter src/main.cpp src/entropy.cpp src/pointpose.cpp src/segmentation.cpp)
 target_link_libraries (EntropyFilter ${PCL_LIBRARIES})
 target_link_libraries(EntropyFilter ${Boost_LIBRARIES})
 

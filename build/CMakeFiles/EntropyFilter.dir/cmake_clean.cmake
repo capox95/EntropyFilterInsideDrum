@@ -2,6 +2,7 @@ file(REMOVE_RECURSE
   "CMakeFiles/EntropyFilter.dir/src/main.cpp.o"
   "CMakeFiles/EntropyFilter.dir/src/entropy.cpp.o"
   "CMakeFiles/EntropyFilter.dir/src/pointpose.cpp.o"
+  "CMakeFiles/EntropyFilter.dir/src/segmentation.cpp.o"
   "EntropyFilter.pdb"
   "EntropyFilter"
 )
