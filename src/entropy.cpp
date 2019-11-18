@@ -460,7 +460,7 @@ void EntropyFilter::alternativeConnectedComponets(pcl::PointCloud<pcl::PointXYZI
         {
             pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
             inliers->indices = indices;
-            std::cout << "number of neighborhood: " << indices.size() << std::endl;
+            //std::cout << "number of neighborhood: " << indices.size() << std::endl;
 
             pcl::ExtractIndices<pcl::PointXYZI> extract;
 
@@ -477,7 +477,7 @@ void EntropyFilter::alternativeConnectedComponets(pcl::PointCloud<pcl::PointXYZI
                 pcl::copyPointCloud(*cloud_temp, *cloud_temp2);
                 cloud_clusters.push_back(cloud_temp2);
 
-                std::cout << "added to clusters" << std::endl;
+                //std::cout << "added to clusters" << std::endl;
             }
 
             // remove points extracted above
@@ -486,7 +486,7 @@ void EntropyFilter::alternativeConnectedComponets(pcl::PointCloud<pcl::PointXYZI
             extract.setNegative(true);
             extract.filter(*cloud);
 
-            std::cout << "remaning cloud size: " << cloud->size() << ", iteration: " << j << std::endl;
+            //std::cout << "remaning cloud size: " << cloud->size() << ", iteration: " << j << std::endl;
         }
     }
 

@@ -11,33 +11,6 @@
 #include "../include/pointpose.h"
 #include "../include/segmentation.h"
 
-void cloudFiltering(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud, pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud_filtered)
-{
-    pcl::PassThrough<pcl::PointXYZRGB> pass;
-    pass.setInputCloud(cloud);
-    pass.setFilterFieldName("x");
-    pass.setFilterLimits(-0.2, 0.2);
-    //pass.setFilterLimitsNegative (true);
-    pass.filter(*cloud_filtered);
-
-    pcl::RadiusOutlierRemoval<pcl::PointXYZRGB> outrem;
-    // build the filter
-    outrem.setInputCloud(cloud_filtered);
-    outrem.setRadiusSearch(0.01);
-    outrem.setMinNeighborsInRadius(20);
-    // apply filter
-    outrem.filter(*cloud_filtered);
-
-    /*
-    pcl::PassThrough<pcl::PointXYZRGB> pass2;
-    pass2.setInputCloud(cloud_filtered);
-    pass2.setFilterFieldName("z");
-    pass2.setFilterLimits(-0.1, 0.5);
-    //pass.setFilterLimitsNegative (true);
-    pass2.filter(*cloud_filtered);
-    */
-}
-
 //----------------------------------------------------------------------------- //
 int main(int argc, char **argv)
 {
@@ -51,8 +24,6 @@ int main(int argc, char **argv)
         return (-1);
     }
     std::cout << "cloud orginal size: " << source->size() << std::endl;
-
-    //cloudFiltering(source, source_filtered);
 
     SegFilter sf;
     sf.setSourceCloud(source);
