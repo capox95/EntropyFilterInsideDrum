@@ -229,7 +229,6 @@ void EntropyFilter::computePolyFitting(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &c
 
     // Reconstruct
     mls.process(mls_points);
-    std::cout << "mls_points: " << mls_points.height << ", " << mls_points.width << std::endl;
 }
 
 void EntropyFilter::divideCloudNormals(pcl::PointCloud<pcl::PointNormal> &input, pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
@@ -427,6 +426,39 @@ void EntropyFilter::connectedComponets(pcl::PointCloud<pcl::PointXYZ>::Ptr &clou
     std::cout << "number of clusters found: " << cluster_indices.size() << std::endl;
 }
 
+void EntropyFilter::alternativeConnectedComponets(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
+                                                  std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &cloud_clusters)
+{
+    // Creating the KdTree object for the search method of the extraction
+    pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>);
+    tree->setInputCloud(cloud);
+
+    std::vector<pcl::PointIndices> cluster_indices;
+    pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
+    ec.setClusterTolerance(0.01); // 2cm
+    ec.setMinClusterSize(50);
+    ec.setMaxClusterSize(25000);
+    ec.setSearchMethod(tree);
+    ec.setInputCloud(cloud);
+    ec.extract(cluster_indices);
+
+    for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin(); it != cluster_indices.end(); ++it)
+    {
+        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster(new pcl::PointCloud<pcl::PointXYZ>);
+        for (std::vector<int>::const_iterator pit = it->indices.begin(); pit != it->indices.end(); ++pit)
+            cloud_cluster->points.push_back(cloud->points[*pit]); //*
+
+        cloud_cluster->width = cloud_cluster->points.size();
+        cloud_cluster->height = 1;
+        cloud_cluster->is_dense = true;
+
+        std::cout << "PointCloud representing the Cluster: " << cloud_cluster->points.size() << " data points." << std::endl;
+        cloud_clusters.push_back(cloud_cluster);
+    }
+
+    std::cout << "number of clusters found: " << cluster_indices.size() << std::endl;
+}
+
 void EntropyFilter::splitPointNormal(pcl::PointCloud<pcl::PointNormal>::Ptr &input, pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
                                      pcl::PointCloud<pcl::Normal>::Ptr &normals)
 {
@@ -489,8 +521,8 @@ void EntropyFilter::combineDepthAndCurvatureInfo(pcl::PointCloud<pcl::PointXYZI>
                                                  pcl::PointCloud<pcl::Normal>::Ptr &normals,
                                                  pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud_map)
 {
-    std::cout << depth->size() << std::endl;
-    std::cout << normals->size() << std::endl;
+    if (depth->size() != normals->size())
+        PCL_WARN("Depth and Normal Clouds are of different size!\n");
 
     cloud_map->width = depth->width;
     cloud_map->height = depth->height;

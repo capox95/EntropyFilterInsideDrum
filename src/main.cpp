@@ -62,8 +62,6 @@ int main(int argc, char **argv)
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr segfilter_cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
     sf.getOutputCloud(segfilter_cloud);
 
-    std::cout << segfilter_cloud->size() << std::endl;
-
     pcl::ModelCoefficients axis;
     sf.getDrumAxis(axis);
 

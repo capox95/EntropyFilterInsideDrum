@@ -107,6 +107,9 @@ private:
     void connectedComponets(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
                             std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &cloud_clusters);
 
+    void alternativeConnectedComponets(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
+                                       std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &cloud_clusters);
+
     void splitPointNormal(pcl::PointCloud<pcl::PointNormal>::Ptr &input,
                           pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
                           pcl::PointCloud<pcl::Normal>::Ptr &normals);

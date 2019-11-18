@@ -66,11 +66,6 @@ void SegFilter::visualizeSeg(bool flagSpin)
     vizSource.addPointCloud<pcl::PointXYZ>(hull_vertices_, "hull");
     vizSource.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 1.0f, 0.0f, 0.0f, "hull");
 
-    pcl::visualization::PCLVisualizer vizResult("PCL vizResult");
-    vizResult.setBackgroundColor(0.0f, 0.0f, 0.5f);
-    vizResult.addPointCloud<pcl::PointXYZRGB>(cloud_output_, "cloud_output_");
-    vizResult.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 1.0f, 1.0f, 1.0f, "cloud_output_");
-
     if (flagSpin)
         vizSource.spin();
 }
@@ -115,12 +110,8 @@ void SegFilter::computeDrumAxes(pcl::ModelCoefficients &line1, pcl::ModelCoeffic
         //std::cout << cloud_fake->points[k].getVector3fMap() << std::endl;
     }
 
-    std::cout << "cloud fake size: " << cloud_fake->size() << std::endl;
-
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_fake_transformed(new pcl::PointCloud<pcl::PointXYZ>);
     transformation(cloud_fake, cloud_fake_transformed);
-
-    std::cout << "cloud transformed size: " << cloud_fake_transformed->size() << std::endl;
 
     // line detection
     pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
@@ -234,8 +225,8 @@ void SegFilter::convexHullCrop(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_bw,
     cropHullFilter.setInputCloud(cloud_bw);
     cropHullFilter.filter(*hull_result);
 
-    std::cout << std::endl;
-    std::cout << "hull result points: " << hull_result->points.size() << std::endl;
+    //std::cout << std::endl;
+    //std::cout << "hull result points: " << hull_result->points.size() << std::endl;
     //for (int i = 0; i < hull_result->points.size(); i++)
     //{
     //    std::cout << hull_result->points[i] << std::endl;
