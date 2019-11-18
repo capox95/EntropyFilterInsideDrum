@@ -14,8 +14,8 @@ private:
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_source, m_cloud_downsample;
     pcl::PointCloud<pcl::PointNormal> m_mls_points;
     pcl::PointCloud<pcl::PointNormal>::Ptr m_convexity_ready;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr m_mls_cloud, m_cloud_seg, m_top_vertices;
-    pcl::PointCloud<pcl::PointXYZI>::Ptr m_cloud_depth, m_cloud_convexity, m_cloud_combined;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr m_mls_cloud, m_top_vertices;
+    pcl::PointCloud<pcl::PointXYZI>::Ptr m_cloud_depth, m_cloud_convexity, m_cloud_combined, m_cloud_seg;
     pcl::PointCloud<pcl::Normal>::Ptr m_mls_normals;
     pcl::PointCloud<Spherical>::Ptr m_spherical;
 
@@ -33,7 +33,7 @@ public:
                       m_mls_cloud(new pcl::PointCloud<pcl::PointXYZ>),
                       m_mls_normals(new pcl::PointCloud<pcl::Normal>),
                       m_spherical(new pcl::PointCloud<Spherical>),
-                      m_cloud_seg(new pcl::PointCloud<pcl::PointXYZ>),
+                      m_cloud_seg(new pcl::PointCloud<pcl::PointXYZI>),
                       m_top_vertices(new pcl::PointCloud<pcl::PointXYZ>),
                       m_cloud_depth(new pcl::PointCloud<pcl::PointXYZI>),
                       m_cloud_convexity(new pcl::PointCloud<pcl::PointXYZI>),
@@ -102,12 +102,12 @@ private:
                       pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud_combined);
 
     void segmentCloudEntropy(pcl::PointCloud<pcl::PointNormal> &cloud, pcl::PointCloud<Spherical>::Ptr &spherical,
-                             pcl::PointCloud<pcl::PointXYZ>::Ptr &output, float thresholdEntropy);
+                             pcl::PointCloud<pcl::PointXYZI>::Ptr &output, float thresholdEntropy);
 
     void connectedComponets(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
                             std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &cloud_clusters);
 
-    void alternativeConnectedComponets(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
+    void alternativeConnectedComponets(pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud,
                                        std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &cloud_clusters);
 
     void splitPointNormal(pcl::PointCloud<pcl::PointNormal>::Ptr &input,

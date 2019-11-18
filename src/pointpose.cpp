@@ -103,10 +103,10 @@ void PointPose::visualizeGrasp()
         viz.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 1.0f, 1.0f, 0.0f, "cloud_grasp" + std::to_string(i));
         viz.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "cloud_grasp" + std::to_string(i));
 
-        viz.addSphere(m_cfp[i].o, 0.005, "sphere" + std::to_string(i));
-        viz.addArrow(m_cfp[i].x, m_cfp[i].o, 1.0f, 0.0f, 0.0f, false, "x_axis" + std::to_string(i));
-        viz.addArrow(m_cfp[i].y, m_cfp[i].o, 0.0f, 1.0f, 0.0f, false, "y_axis" + std::to_string(i));
-        viz.addArrow(m_cfp[i].z, m_cfp[i].o, 0.0f, 0.0f, 1.0f, false, "z_axis" + std::to_string(i));
+        viz.addSphere(m_cfp_viz[i].o, 0.005, "sphere" + std::to_string(i));
+        viz.addArrow(m_cfp_viz[i].x, m_cfp_viz[i].o, 1.0f, 0.0f, 0.0f, false, "x_axis" + std::to_string(i));
+        viz.addArrow(m_cfp_viz[i].y, m_cfp_viz[i].o, 0.0f, 1.0f, 0.0f, false, "y_axis" + std::to_string(i));
+        viz.addArrow(m_cfp_viz[i].z, m_cfp_viz[i].o, 0.0f, 0.0f, 1.0f, false, "z_axis" + std::to_string(i));
 
         viz.addSphere(m_pointOnAxis[i], 0.01, 1.0f, 0.0f, 0.0f, "pointOnAxis" + std::to_string(i));
     }
@@ -160,13 +160,14 @@ void PointPose::getCoordinateFrame(Eigen::Vector3f &centroid, Eigen::Matrix3f &r
     pcl::PointXYZ PointY = pcl::PointXYZ((centroid(0) + rotation.col(2)(0)),
                                          (centroid(1) + rotation.col(2)(1)),
                                          (centroid(2) + rotation.col(2)(2)));
-
-    if (PointY.z < centroid(1))
+    /*
+    if (PointY.z > centroid(2))
     {
         PointY = pcl::PointXYZ((centroid(0) - rotation.col(2)(0)),
                                (centroid(1) - rotation.col(2)(1)),
                                (centroid(2) - rotation.col(2)(2)));
     }
+    */
 
     CoordinateFramePoints points;
     points.o = centroidXYZ;
@@ -178,6 +179,44 @@ void PointPose::getCoordinateFrame(Eigen::Vector3f &centroid, Eigen::Matrix3f &r
     directionZ = points.z.getVector3fMap() - points.o.getVector3fMap();
 
     m_cfp.push_back(points);
+
+    computeCoordinateFramePointsViz(centroid, rotation);
+}
+
+void PointPose::computeCoordinateFramePointsViz(Eigen::Vector3f &centroid, Eigen::Matrix3f &rotation)
+{
+    float factor = 0.1;
+    pcl::PointXYZ centroidXYZ;
+    centroidXYZ.getVector3fMap() = centroid;
+
+    pcl::PointXYZ PointX = pcl::PointXYZ((centroid(0) + factor * rotation.col(0)(0)),
+                                         (centroid(1) + factor * rotation.col(0)(1)),
+                                         (centroid(2) + factor * rotation.col(0)(2)));
+
+    pcl::PointXYZ PointZ = pcl::PointXYZ((centroid(0) + factor * rotation.col(1)(0)),
+                                         (centroid(1) + factor * rotation.col(1)(1)),
+                                         (centroid(2) + factor * rotation.col(1)(2)));
+
+    pcl::PointXYZ PointY = pcl::PointXYZ((centroid(0) + factor * rotation.col(2)(0)),
+                                         (centroid(1) + factor * rotation.col(2)(1)),
+                                         (centroid(2) + factor * rotation.col(2)(2)));
+
+    /*
+    if (PointY.z > centroid(2))
+    {
+        PointY = pcl::PointXYZ((centroid(0) - factor * rotation.col(2)(0)),
+                               (centroid(1) - factor * rotation.col(2)(1)),
+                               (centroid(2) - factor * rotation.col(2)(2)));
+    }
+    */
+
+    CoordinateFramePoints points;
+    points.o = centroidXYZ;
+    points.x = PointX;
+    points.y = PointY;
+    points.z = PointZ;
+
+    m_cfp_viz.push_back(points);
 }
 
 Eigen::Affine3d PointPose::computeTransformation(Eigen::Vector3f &centroid, Eigen::Vector3f &directionX, Eigen::Vector3f &directionZ)

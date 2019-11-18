@@ -23,6 +23,7 @@ private:
 
     std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> m_clouds_vector;
     std::vector<CoordinateFramePoints> m_cfp;
+    std::vector<CoordinateFramePoints> m_cfp_viz;
 
     pcl::ModelCoefficients m_axis, m_plane;
     std::vector<pcl::PointXYZ> m_pointOnAxis;
@@ -77,4 +78,6 @@ private:
 
     void projectPointsOntoPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, pcl::ModelCoefficients &plane,
                                 pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_projected);
+
+    void computeCoordinateFramePointsViz(Eigen::Vector3f &centroid, Eigen::Matrix3f &rotation);
 };
