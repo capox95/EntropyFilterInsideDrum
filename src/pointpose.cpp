@@ -79,10 +79,8 @@ bool PointPose::computeGraspPoint(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
 
     m_trans = centroid.head<3>();
 
-    getCoordinateFrame(m_trans, rotation);
-
-    Eigen::Vector3f directionX = m_cfp[0].x.getVector3fMap() - m_cfp[0].o.getVector3fMap();
-    Eigen::Vector3f directionZ = m_cfp[0].z.getVector3fMap() - m_cfp[0].o.getVector3fMap();
+    Eigen::Vector3f directionX, directionZ;
+    getCoordinateFrame(m_trans, rotation, directionX, directionZ);
 
     transformation_matrix = computeTransformation(m_trans, directionX, directionZ);
     point = pointOnTheLine.getVector3fMap();
@@ -145,29 +143,29 @@ std::vector<int> PointPose::orderEigenvalues(Eigen::Vector3f eigenValuesPCA)
     return result;
 }
 
-void PointPose::getCoordinateFrame(Eigen::Vector3f &centroid, Eigen::Matrix3f &rotation)
+void PointPose::getCoordinateFrame(Eigen::Vector3f &centroid, Eigen::Matrix3f &rotation,
+                                   Eigen::Vector3f &directionX, Eigen::Vector3f &directionZ)
 {
     pcl::PointXYZ centroidXYZ;
     centroidXYZ.getVector3fMap() = centroid;
 
-    float factor = 0.1;
+    pcl::PointXYZ PointX = pcl::PointXYZ((centroid(0) + rotation.col(0)(0)),
+                                         (centroid(1) + rotation.col(0)(1)),
+                                         (centroid(2) + rotation.col(0)(2)));
 
-    pcl::PointXYZ PointX = pcl::PointXYZ((centroid(0) + factor * rotation.col(0)(0)),
-                                         (centroid(1) + factor * rotation.col(0)(1)),
-                                         (centroid(2) + factor * rotation.col(0)(2)));
+    pcl::PointXYZ PointZ = pcl::PointXYZ((centroid(0) + rotation.col(1)(0)),
+                                         (centroid(1) + rotation.col(1)(1)),
+                                         (centroid(2) + rotation.col(1)(2)));
 
-    pcl::PointXYZ PointZ = pcl::PointXYZ((centroid(0) + factor * rotation.col(1)(0)),
-                                         (centroid(1) + factor * rotation.col(1)(1)),
-                                         (centroid(2) + factor * rotation.col(1)(2)));
+    pcl::PointXYZ PointY = pcl::PointXYZ((centroid(0) + rotation.col(2)(0)),
+                                         (centroid(1) + rotation.col(2)(1)),
+                                         (centroid(2) + rotation.col(2)(2)));
 
-    pcl::PointXYZ PointY = pcl::PointXYZ((centroid(0) + factor * rotation.col(2)(0)),
-                                         (centroid(1) + factor * rotation.col(2)(1)),
-                                         (centroid(2) + factor * rotation.col(2)(2)));
     if (PointY.z < centroid(1))
     {
-        PointY = pcl::PointXYZ((centroid(0) - factor * rotation.col(2)(0)),
-                               (centroid(1) - factor * rotation.col(2)(1)),
-                               (centroid(2) - factor * rotation.col(2)(2)));
+        PointY = pcl::PointXYZ((centroid(0) - rotation.col(2)(0)),
+                               (centroid(1) - rotation.col(2)(1)),
+                               (centroid(2) - rotation.col(2)(2)));
     }
 
     CoordinateFramePoints points;
@@ -176,10 +174,13 @@ void PointPose::getCoordinateFrame(Eigen::Vector3f &centroid, Eigen::Matrix3f &r
     points.y = PointY;
     points.z = PointZ;
 
+    directionX = points.x.getVector3fMap() - points.o.getVector3fMap();
+    directionZ = points.z.getVector3fMap() - points.o.getVector3fMap();
+
     m_cfp.push_back(points);
 }
 
-Eigen::Affine3d PointPose::computeTransformation(Eigen::Vector3f centroid, Eigen::Vector3f directionX, Eigen::Vector3f directionZ)
+Eigen::Affine3d PointPose::computeTransformation(Eigen::Vector3f &centroid, Eigen::Vector3f &directionX, Eigen::Vector3f &directionZ)
 {
     Eigen::VectorXd from_line_x, from_line_z, to_line_x, to_line_z;
 
@@ -201,7 +202,7 @@ Eigen::Affine3d PointPose::computeTransformation(Eigen::Vector3f centroid, Eigen
     Eigen::Affine3d transformation;
     if (!pcl::transformBetween2CoordinateSystems(from_line_x, from_line_z, to_line_x, to_line_z, transformation))
     {
-        PCL_WARN("Transformation matrix not found!\n");
+        PCL_WARN("Transformation not found!\n");
     }
     return transformation;
 }

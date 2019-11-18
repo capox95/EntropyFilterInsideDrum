@@ -23,6 +23,7 @@ private:
 
     std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> m_clouds_vector;
     std::vector<CoordinateFramePoints> m_cfp;
+
     pcl::ModelCoefficients m_axis, m_plane;
     std::vector<pcl::PointXYZ> m_pointOnAxis;
 
@@ -66,9 +67,10 @@ public:
 private:
     std::vector<int> orderEigenvalues(Eigen::Vector3f eigenValuesPCA);
 
-    void getCoordinateFrame(Eigen::Vector3f &centroid, Eigen::Matrix3f &rotation);
+    void getCoordinateFrame(Eigen::Vector3f &centroid, Eigen::Matrix3f &rotation,
+                            Eigen::Vector3f &directionX, Eigen::Vector3f &directionZ);
 
-    Eigen::Affine3d computeTransformation(Eigen::Vector3f centroid, Eigen::Vector3f directionX, Eigen::Vector3f directionZ);
+    Eigen::Affine3d computeTransformation(Eigen::Vector3f &centroid, Eigen::Vector3f &directionX, Eigen::Vector3f &directionZ);
 
     void computeRefPlane(pcl::ModelCoefficients &axis, Eigen::Vector4f &centroid,
                          pcl::ModelCoefficients &plane, pcl::PointXYZ &pointOnTheLine);
