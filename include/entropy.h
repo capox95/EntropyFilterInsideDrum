@@ -104,7 +104,7 @@ private:
     void segmentCloudEntropy(pcl::PointCloud<pcl::PointNormal> &cloud, pcl::PointCloud<Spherical>::Ptr &spherical,
                              pcl::PointCloud<pcl::PointXYZI>::Ptr &output, float thresholdEntropy);
 
-    void connectedComponets(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
+    void connectedComponets(pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud,
                             std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &cloud_clusters);
 
     void alternativeConnectedComponets(pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud,

@@ -68,8 +68,8 @@ public:
 private:
     std::vector<int> orderEigenvalues(Eigen::Vector3f eigenValuesPCA);
 
-    void getCoordinateFrame(Eigen::Vector3f &centroid, Eigen::Matrix3f &rotation,
-                            Eigen::Vector3f &directionX, Eigen::Vector3f &directionZ);
+    void getCoordinateFrame(Eigen::Vector3f &centroid, Eigen::Matrix3f &rotation, pcl::PointXYZ &pointOnTheLine,
+     Eigen::Vector3f &directionX, Eigen::Vector3f &directionZ);
 
     Eigen::Affine3d computeTransformation(Eigen::Vector3f &centroid, Eigen::Vector3f &directionX, Eigen::Vector3f &directionZ);
 
@@ -79,5 +79,5 @@ private:
     void projectPointsOntoPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, pcl::ModelCoefficients &plane,
                                 pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_projected);
 
-    void computeCoordinateFramePointsViz(Eigen::Vector3f &centroid, Eigen::Matrix3f &rotation);
+    void computeCoordinateFramePointsViz(Eigen::Vector3f &centroid, Eigen::Matrix3f &rotation, bool reverse);
 };

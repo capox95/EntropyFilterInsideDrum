@@ -55,18 +55,20 @@ bool EntropyFilter::compute(std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &cl
 
     segmentCloudEntropy(m_mls_points, m_spherical, m_cloud_seg, m_entropy_threshold);
 
-    if (m_cloud_seg->size() > 50)
+    if (m_cloud_seg->size() > 100)
     {
 
         std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> clouds_connected;
-        alternativeConnectedComponets(m_cloud_seg, clouds_connected);
+        //alternativeConnectedComponets(m_cloud_seg, clouds_connected);
+        connectedComponets(m_cloud_seg, clouds_connected);
         clouds_out = clouds_connected;
     }
     else
     {
-        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_out_conv(new pcl::PointCloud<pcl::PointXYZ>);
-        pcl::copyPointCloud(*m_cloud_seg, *cloud_out_conv);
-        clouds_out.push_back(cloud_out_conv);
+        std::cout << "proceding with alternative approach..." << std::endl;
+        std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> clouds_connected;
+        alternativeConnectedComponets(m_cloud_seg, clouds_connected);
+        clouds_out = clouds_connected;
     }
     return true;
 }
@@ -370,6 +372,7 @@ void EntropyFilter::local_search(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, pcl
             if (kdtree.nearestKSearch(searchPoint, m_KNN, pointIdxNKNSearch, pointNKNSquaredDistance) > 0)
             {
                 histogram2D(spherical, it, pointIdxNKNSearch);
+                spherical->points[it].entropy *= cloud_combined->points[it].intensity;
             }
         }
         else
@@ -397,15 +400,15 @@ void EntropyFilter::segmentCloudEntropy(pcl::PointCloud<pcl::PointNormal> &cloud
     std::cout << "cloud segmented size: " << output->size() << std::endl;
 }
 
-void EntropyFilter::connectedComponets(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
+void EntropyFilter::connectedComponets(pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud,
                                        std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &cloud_clusters)
 {
     // Creating the KdTree object for the search method of the extraction
-    pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>);
+    pcl::search::KdTree<pcl::PointXYZI>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZI>);
     tree->setInputCloud(cloud);
 
     std::vector<pcl::PointIndices> cluster_indices;
-    pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
+    pcl::EuclideanClusterExtraction<pcl::PointXYZI> ec;
     ec.setClusterTolerance(0.01); // 2cm
     ec.setMinClusterSize(50);
     ec.setMaxClusterSize(25000);
@@ -415,7 +418,7 @@ void EntropyFilter::connectedComponets(pcl::PointCloud<pcl::PointXYZ>::Ptr &clou
 
     for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin(); it != cluster_indices.end(); ++it)
     {
-        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster(new pcl::PointCloud<pcl::PointXYZ>);
+        pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_cluster(new pcl::PointCloud<pcl::PointXYZI>);
         for (std::vector<int>::const_iterator pit = it->indices.begin(); pit != it->indices.end(); ++pit)
             cloud_cluster->points.push_back(cloud->points[*pit]); //*
 
@@ -424,7 +427,9 @@ void EntropyFilter::connectedComponets(pcl::PointCloud<pcl::PointXYZ>::Ptr &clou
         cloud_cluster->is_dense = true;
 
         std::cout << "PointCloud representing the Cluster: " << cloud_cluster->points.size() << " data points." << std::endl;
-        cloud_clusters.push_back(cloud_cluster);
+        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster_xyz(new pcl::PointCloud<pcl::PointXYZ>);
+        pcl::copyPointCloud(*cloud_cluster, *cloud_cluster_xyz);
+        cloud_clusters.push_back(cloud_cluster_xyz);
     }
 
     std::cout << "number of clusters found: " << cluster_indices.size() << std::endl;
@@ -464,21 +469,18 @@ void EntropyFilter::alternativeConnectedComponets(pcl::PointCloud<pcl::PointXYZI
 
             pcl::ExtractIndices<pcl::PointXYZI> extract;
 
-            if (indices.size() > 100)
-            {
-                pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_temp(new pcl::PointCloud<pcl::PointXYZI>);
-                pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_temp2(new pcl::PointCloud<pcl::PointXYZ>);
+            pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_temp(new pcl::PointCloud<pcl::PointXYZI>);
+            pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_temp2(new pcl::PointCloud<pcl::PointXYZ>);
 
-                extract.setInputCloud(cloud);
-                extract.setIndices(inliers);
-                extract.setNegative(false);
-                extract.filter(*cloud_temp);
+            extract.setInputCloud(cloud);
+            extract.setIndices(inliers);
+            extract.setNegative(false);
+            extract.filter(*cloud_temp);
 
-                pcl::copyPointCloud(*cloud_temp, *cloud_temp2);
-                cloud_clusters.push_back(cloud_temp2);
+            pcl::copyPointCloud(*cloud_temp, *cloud_temp2);
+            cloud_clusters.push_back(cloud_temp2);
 
-                //std::cout << "added to clusters" << std::endl;
-            }
+            //std::cout << "added to clusters" << std::endl;
 
             // remove points extracted above
             extract.setInputCloud(cloud);
@@ -564,11 +566,13 @@ void EntropyFilter::combineDepthAndCurvatureInfo(pcl::PointCloud<pcl::PointXYZI>
 
     std::vector<bool> result;
     result.resize(normals->size());
+    float value;
     for (int i = 0; i < normals->size(); i++)
     {
         if (normals->points[i].curvature >= m_curvature_threshold && depth->points[i].intensity <= m_depth_threshold)
         {
-            cloud_map->points[i].intensity = 1;
+            value = (m_depth_threshold - depth->points[i].intensity) * 50;
+            cloud_map->points[i].intensity = value;
         }
         else
         {

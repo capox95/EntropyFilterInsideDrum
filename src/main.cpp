@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     EntropyFilter ef;
     ef.setInputCloud(segfilter_cloud);
     ef.setDownsampleLeafSize(0.0001); // size of the leaf for downsampling the cloud, value in meters. Default = 5 mm
-    ef.setEntropyThreshold(0.5);      // Segmentation performed for all points with normalized entropy value above this
+    ef.setEntropyThreshold(0.75);      // Segmentation performed for all points with normalized entropy value above this
     ef.setKLocalSearch(500);          // Nearest Neighbour Local Search
     ef.setCurvatureThreshold(0.03);   // Curvature Threshold for the computation of Entropy
     ef.setDepthThreshold(0.23);       //0.29         // if the segment region has a value of depth lower than this -> not graspable (value in meters)

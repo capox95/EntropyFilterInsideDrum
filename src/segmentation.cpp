@@ -34,7 +34,7 @@ void SegFilter::compute()
     Eigen::Vector3f center = origin + axis_dir * distanceCenterDrum_;
     centerPoint_.getVector3fMap() = center;
 
-    segPoint1_.getVector3fMap() = center - (drumDepth_ / 2) * axis_dir;
+    segPoint1_.getVector3fMap() = center - (drumDepth_ / 1.5) * axis_dir;
     segPoint2_.getVector3fMap() = center + (drumDepth_ / 2) * axis_dir;
 
     Eigen::Vector3f vector_dir = {line2_.values[3], line2_.values[4], line2_.values[5]};
