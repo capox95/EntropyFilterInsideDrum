@@ -15,3 +15,7 @@ add_executable (EntropyFilter src/main.cpp src/entropy.cpp src/pointpose.cpp src
 target_link_libraries (EntropyFilter ${PCL_LIBRARIES})
 target_link_libraries(EntropyFilter ${Boost_LIBRARIES})
 
+add_executable (Paddles src/paddles.cpp src/findTarget.cpp src/drumModel.cpp)
+target_link_libraries (Paddles ${PCL_LIBRARIES})
+target_link_libraries(Paddles ${Boost_LIBRARIES})
+

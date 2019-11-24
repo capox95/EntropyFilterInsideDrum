@@ -56,17 +56,6 @@ CMAKE_BINARY_DIR = /home/alessio/dev/EntropyInside/build
 #=============================================================================
 # Targets provided globally by CMake.
 
-# Special rule for the target edit_cache
-edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake cache editor..."
-	/usr/bin/ccmake -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
-.PHONY : edit_cache
-
-# Special rule for the target edit_cache
-edit_cache/fast: edit_cache
-
-.PHONY : edit_cache/fast
-
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake to regenerate build system..."
@@ -77,6 +66,17 @@ rebuild_cache:
 rebuild_cache/fast: rebuild_cache
 
 .PHONY : rebuild_cache/fast
+
+# Special rule for the target edit_cache
+edit_cache:
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --cyan "Running CMake cache editor..."
+	/usr/bin/ccmake -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+.PHONY : edit_cache
+
+# Special rule for the target edit_cache
+edit_cache/fast: edit_cache
+
+.PHONY : edit_cache/fast
 
 # The main all target
 all: cmake_check_build_system
@@ -123,6 +123,46 @@ EntropyFilter/fast:
 	$(MAKE) -f CMakeFiles/EntropyFilter.dir/build.make CMakeFiles/EntropyFilter.dir/build
 .PHONY : EntropyFilter/fast
 
+#=============================================================================
+# Target rules for targets named Paddles
+
+# Build rule for target.
+Paddles: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 Paddles
+.PHONY : Paddles
+
+# fast build rule for target.
+Paddles/fast:
+	$(MAKE) -f CMakeFiles/Paddles.dir/build.make CMakeFiles/Paddles.dir/build
+.PHONY : Paddles/fast
+
+src/drumModel.o: src/drumModel.cpp.o
+
+.PHONY : src/drumModel.o
+
+# target to build an object file
+src/drumModel.cpp.o:
+	$(MAKE) -f CMakeFiles/Paddles.dir/build.make CMakeFiles/Paddles.dir/src/drumModel.cpp.o
+.PHONY : src/drumModel.cpp.o
+
+src/drumModel.i: src/drumModel.cpp.i
+
+.PHONY : src/drumModel.i
+
+# target to preprocess a source file
+src/drumModel.cpp.i:
+	$(MAKE) -f CMakeFiles/Paddles.dir/build.make CMakeFiles/Paddles.dir/src/drumModel.cpp.i
+.PHONY : src/drumModel.cpp.i
+
+src/drumModel.s: src/drumModel.cpp.s
+
+.PHONY : src/drumModel.s
+
+# target to generate assembly for a file
+src/drumModel.cpp.s:
+	$(MAKE) -f CMakeFiles/Paddles.dir/build.make CMakeFiles/Paddles.dir/src/drumModel.cpp.s
+.PHONY : src/drumModel.cpp.s
+
 src/entropy.o: src/entropy.cpp.o
 
 .PHONY : src/entropy.o
@@ -150,6 +190,33 @@ src/entropy.cpp.s:
 	$(MAKE) -f CMakeFiles/EntropyFilter.dir/build.make CMakeFiles/EntropyFilter.dir/src/entropy.cpp.s
 .PHONY : src/entropy.cpp.s
 
+src/findTarget.o: src/findTarget.cpp.o
+
+.PHONY : src/findTarget.o
+
+# target to build an object file
+src/findTarget.cpp.o:
+	$(MAKE) -f CMakeFiles/Paddles.dir/build.make CMakeFiles/Paddles.dir/src/findTarget.cpp.o
+.PHONY : src/findTarget.cpp.o
+
+src/findTarget.i: src/findTarget.cpp.i
+
+.PHONY : src/findTarget.i
+
+# target to preprocess a source file
+src/findTarget.cpp.i:
+	$(MAKE) -f CMakeFiles/Paddles.dir/build.make CMakeFiles/Paddles.dir/src/findTarget.cpp.i
+.PHONY : src/findTarget.cpp.i
+
+src/findTarget.s: src/findTarget.cpp.s
+
+.PHONY : src/findTarget.s
+
+# target to generate assembly for a file
+src/findTarget.cpp.s:
+	$(MAKE) -f CMakeFiles/Paddles.dir/build.make CMakeFiles/Paddles.dir/src/findTarget.cpp.s
+.PHONY : src/findTarget.cpp.s
+
 src/main.o: src/main.cpp.o
 
 .PHONY : src/main.o
@@ -176,6 +243,33 @@ src/main.s: src/main.cpp.s
 src/main.cpp.s:
 	$(MAKE) -f CMakeFiles/EntropyFilter.dir/build.make CMakeFiles/EntropyFilter.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
+
+src/paddles.o: src/paddles.cpp.o
+
+.PHONY : src/paddles.o
+
+# target to build an object file
+src/paddles.cpp.o:
+	$(MAKE) -f CMakeFiles/Paddles.dir/build.make CMakeFiles/Paddles.dir/src/paddles.cpp.o
+.PHONY : src/paddles.cpp.o
+
+src/paddles.i: src/paddles.cpp.i
+
+.PHONY : src/paddles.i
+
+# target to preprocess a source file
+src/paddles.cpp.i:
+	$(MAKE) -f CMakeFiles/Paddles.dir/build.make CMakeFiles/Paddles.dir/src/paddles.cpp.i
+.PHONY : src/paddles.cpp.i
+
+src/paddles.s: src/paddles.cpp.s
+
+.PHONY : src/paddles.s
+
+# target to generate assembly for a file
+src/paddles.cpp.s:
+	$(MAKE) -f CMakeFiles/Paddles.dir/build.make CMakeFiles/Paddles.dir/src/paddles.cpp.s
+.PHONY : src/paddles.cpp.s
 
 src/pointpose.o: src/pointpose.cpp.o
 
@@ -237,15 +331,25 @@ help:
 	@echo "... all (the default if no target is provided)"
 	@echo "... clean"
 	@echo "... depend"
+	@echo "... rebuild_cache"
 	@echo "... edit_cache"
 	@echo "... EntropyFilter"
-	@echo "... rebuild_cache"
+	@echo "... Paddles"
+	@echo "... src/drumModel.o"
+	@echo "... src/drumModel.i"
+	@echo "... src/drumModel.s"
 	@echo "... src/entropy.o"
 	@echo "... src/entropy.i"
 	@echo "... src/entropy.s"
+	@echo "... src/findTarget.o"
+	@echo "... src/findTarget.i"
+	@echo "... src/findTarget.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... src/paddles.o"
+	@echo "... src/paddles.i"
+	@echo "... src/paddles.s"
 	@echo "... src/pointpose.o"
 	@echo "... src/pointpose.i"
 	@echo "... src/pointpose.s"
