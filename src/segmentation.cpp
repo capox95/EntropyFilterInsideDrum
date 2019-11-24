@@ -1,32 +1,25 @@
 #include "../include/segmentation.h"
 
+// INPUT DATA
 void SegFilter::setSourceCloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud) { source_ = cloud; }
 
-void SegFilter::getOutputCloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud) { cloud = cloud_output_; }
+void SegFilter::setLine1(Eigen::Vector3f &pt, Eigen::Vector3f &dir) { line1_.values = {pt.x(), pt.y(), pt.z(), dir.x(), dir.y(), dir.z()}; }
 
-void SegFilter::getDrumAxis(pcl::ModelCoefficients &axis) { axis = line1_; }
+void SegFilter::setLine2(Eigen::Vector3f &pt, Eigen::Vector3f &dir) { line2_.values = {pt.x(), pt.y(), pt.z(), dir.x(), dir.y(), dir.z()}; }
 
-void SegFilter::compute()
+void SegFilter::setDrumDimensions(float radius, float depth)
 {
-    computeDrumAxes(line1_, line2_);
+    drumDepth_ = depth;
+    radiusDrum_ = radius;
+};
 
-    // origin of the Drum
-    line1_.values[0] = 0;
-    line1_.values[1] = 0.09;
-    line1_.values[2] = 0.11;
-    line2_.values[0] = 0;
-    line2_.values[1] = 0.09;
-    line2_.values[2] = 0.11;
+void SegFilter::setDistanceDrumCenter(float distanceCenter) { distanceCenterDrum_ = distanceCenter; }
 
-    /*
-    std::cout << std::endl;
-    for (int i = 0; i < line1_.values.size(); i++)
-        std::cout << line1_.values[i] << ", ";
-    std::cout << std::endl;
-    for (int i = 0; i < line1_.values.size(); i++)
-        std::cout << line2_.values[i] << ", ";
-    std::cout << std::endl;
-    */
+// COMPUTE FUNCTION
+void SegFilter::compute(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud)
+{
+
+    //computeDrumAxes(line1_, line2_);
 
     Eigen::Vector3f axis_dir = {line1_.values[3], line1_.values[4], line1_.values[5]};
     Eigen::Vector3f origin = {line1_.values[0], line1_.values[1], line1_.values[2]};
@@ -44,15 +37,12 @@ void SegFilter::compute()
 
     combineHullPoints(pointsHull1_, pointsHull2_, hull_vertices_);
 
-    pcl::copyPointCloud(*source_, *source_bw_);
-    convexHullCrop(source_bw_, hull_vertices_, hull_result_);
+    convexHullCrop(source_, hull_vertices_, cloud_output_);
 
-    //pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_out(new pcl::PointCloud<pcl::PointXYZ>);
-    //refineCrop(hull_result_, cloud_out, segPoint1_, axis_dir);
-
-    pcl::copyPointCloud(*hull_result_, *cloud_output_);
+    cloud = cloud_output_;
 }
 
+// VISUALIZATION
 void SegFilter::visualizeSeg(bool flagSpin)
 {
     pcl::visualization::PCLVisualizer vizSource("PCL Transformation");
@@ -74,30 +64,120 @@ void SegFilter::visualizeSeg(bool flagSpin)
     vizSource.addLine(line1_0, line1_1, 1.0f, 0.0f, 0.0f, "line1");
     vizSource.addLine(line2_0, line2_1, 0.0f, 0.0f, 1.0f, "line2");
 
-    vizSource.addPointCloud<pcl::PointXYZ>(hull_vertices_, "hull");
+    vizSource.addPointCloud<pcl::PointXYZRGB>(hull_vertices_, "hull");
     vizSource.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 1.0f, 0.0f, 0.0f, "hull");
     vizSource.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 4, "hull");
 
     pcl::visualization::PCLVisualizer vizHull("PCL Result Hull");
     //vizSource.addCoordinateSystem(0.1, "coord");
     vizHull.setBackgroundColor(1.0f, 1.0f, 1.0f);
-    vizHull.addPointCloud<pcl::PointXYZ>(hull_result_, "hull_result_");
-    vizHull.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 1.0f, 0.0f, 0.0f, "hull_result_");
+    vizHull.addPointCloud<pcl::PointXYZRGB>(cloud_output_, "cloud_output_");
+    vizHull.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 1.0f, 0.0f, 0.0f, "cloud_output_");
 
     if (flagSpin)
         vizSource.spin();
 }
 
-void SegFilter::transformation(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_out)
+// PRIVATE FUNCTIONS:
+std::vector<pcl::PointXYZ> SegFilter::calculateHullPoints(pcl::PointXYZ &point1, Eigen::Vector3f &axis,
+                                                          Eigen::Vector3f &vector, float radius_cylinder)
 {
-    float theta = 0.9075; // 0.9075 --- 52 deg
 
-    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
-    transform.translation() << 0.0, 0.0, 0.0;
-    transform.rotate(Eigen::AngleAxisf(theta, Eigen::Vector3f::UnitX()));
-    pcl::transformPointCloud(*cloud, *cloud_out, transform);
+    //extra padding
+    radius_cylinder += 0.05; // <<<----------------------------------
+
+    std::vector<pcl::PointXYZ> newPoints;
+    pcl::PointXYZ new_point;
+
+    // Rodrigues' rotation formula
+
+    // angle to rotate
+    float theta = M_PI / 10;
+
+    // unit versor k
+    Eigen::Vector3f k = axis;
+    k.normalize();
+
+    // vector to rotate V
+    Eigen::Vector3f V = vector;
+    Eigen::Vector3f V_rot;
+
+    V_rot = V * cos(-M_PI_2) + (k.cross(V)) * sin(-M_PI_2) + k * (k.dot(V)) * (1 - cos(-M_PI_2));
+    V_rot.normalize();
+    new_point.x = point1.x + radius_cylinder * V_rot.x();
+    new_point.y = point1.y + radius_cylinder * V_rot.y();
+    new_point.z = point1.z + radius_cylinder * V_rot.z();
+
+    newPoints.push_back(new_point);
+    V = V_rot;
+
+    for (int c = 0; c < 10; c++)
+    {
+
+        V_rot = V * cos(theta) + (k.cross(V)) * sin(theta) + k * (k.dot(V)) * (1 - cos(theta));
+        V_rot.normalize();
+
+        new_point.x = point1.x + radius_cylinder * V_rot.x();
+        new_point.y = point1.y + radius_cylinder * V_rot.y();
+        new_point.z = point1.z + radius_cylinder * V_rot.z();
+
+        newPoints.push_back(new_point);
+        V = V_rot;
+    }
+
+    newPoints.push_back(point1);
+
+    return newPoints;
 }
 
+void SegFilter::combineHullPoints(std::vector<pcl::PointXYZ> &p1, std::vector<pcl::PointXYZ> &p2,
+                                  pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud)
+{
+    cloud->width = p1.size() + p2.size();
+    cloud->height = 1;
+    cloud->resize(cloud->width * cloud->height);
+
+    for (int i = 0; i < p1.size(); i++)
+    {
+        cloud->points[i].x = p1[i].x;
+        cloud->points[i].y = p1[i].y;
+        cloud->points[i].z = p1[i].z;
+    }
+
+    for (int i = 0; i < p2.size(); i++)
+    {
+        cloud->points[i + p1.size()].x = p2[i].x;
+        cloud->points[i + p1.size()].y = p2[i].y;
+        cloud->points[i + p1.size()].z = p2[i].z;
+    }
+}
+
+void SegFilter::convexHullCrop(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud,
+                               pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud_vertices,
+                               pcl::PointCloud<pcl::PointXYZRGB>::Ptr &hull_result)
+{
+    pcl::CropHull<pcl::PointXYZRGB> cropHullFilter;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_hull(new pcl::PointCloud<pcl::PointXYZRGB>);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr points_hull(new pcl::PointCloud<pcl::PointXYZRGB>);
+    std::vector<pcl::Vertices> hullPolygons;
+
+    // setup hull filter
+    pcl::ConvexHull<pcl::PointXYZRGB> cHull;
+    cHull.setInputCloud(cloud_vertices);
+    cHull.reconstruct(*points_hull, hullPolygons);
+
+    cropHullFilter.setHullIndices(hullPolygons);
+    cropHullFilter.setHullCloud(points_hull);
+    cropHullFilter.setCropOutside(true);
+
+    //filter points
+    cropHullFilter.setInputCloud(cloud);
+    cropHullFilter.filter(*hull_result);
+}
+
+//---------------------------------------------------------------------------------------------
+//functions to compute drum axes, only for debug
+/*
 void SegFilter::computeDrumAxes(pcl::ModelCoefficients &line1, pcl::ModelCoefficients &line2)
 {
 
@@ -151,143 +231,32 @@ void SegFilter::computeDrumAxes(pcl::ModelCoefficients &line1, pcl::ModelCoeffic
 
     seg.setInputCloud(cloud_fake_transformed);
     seg.segment(*inliers, line2);
-}
 
-std::vector<pcl::PointXYZ> SegFilter::calculateHullPoints(pcl::PointXYZ &point1, Eigen::Vector3f &axis,
-                                                          Eigen::Vector3f &vector, float radius_cylinder)
-{
+    // origin
+    line1.values[0] = 0;
+    line1.values[1] = 0.09;
+    line1.values[2] = 0.11;
+    line2.values[0] = 0;
+    line2.values[1] = 0.09;
+    line2.values[2] = 0.11;
 
-    //extra padding
-    radius_cylinder += 0.05; // <<<----------------------------------
-
-    std::vector<pcl::PointXYZ> newPoints;
-    pcl::PointXYZ new_point;
-
-    // Rodrigues' rotation formula
-
-    // angle to rotate
-    float theta = M_PI / 10;
-
-    // unit versor k
-    Eigen::Vector3f k = axis;
-    k.normalize();
-
-    // vector to rotate V
-    Eigen::Vector3f V = vector;
-    Eigen::Vector3f V_rot;
-
-    V_rot = V * cos(-M_PI_2) + (k.cross(V)) * sin(-M_PI_2) + k * (k.dot(V)) * (1 - cos(-M_PI_2));
-    V_rot.normalize();
-    new_point.x = point1.x + radius_cylinder * V_rot.x();
-    new_point.y = point1.y + radius_cylinder * V_rot.y();
-    new_point.z = point1.z + radius_cylinder * V_rot.z();
-
-    newPoints.push_back(new_point);
-    V = V_rot;
-
-    for (int c = 0; c < 10; c++)
+    for (int i = 0; i < line1.values.size(); i++)
     {
-
-        V_rot = V * cos(theta) + (k.cross(V)) * sin(theta) + k * (k.dot(V)) * (1 - cos(theta));
-        V_rot.normalize();
-
-        new_point.x = point1.x + radius_cylinder * V_rot.x();
-        new_point.y = point1.y + radius_cylinder * V_rot.y();
-        new_point.z = point1.z + radius_cylinder * V_rot.z();
-
-        newPoints.push_back(new_point);
-        V = V_rot;
+        std::cout << line1.values[i] << std::endl;
     }
-
-    newPoints.push_back(point1);
-
-    return newPoints;
-}
-
-void SegFilter::combineHullPoints(std::vector<pcl::PointXYZ> &p1, std::vector<pcl::PointXYZ> &p2,
-                                  pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud)
-{
-    cloud->width = p1.size() + p2.size();
-    cloud->height = 1;
-    cloud->resize(cloud->width * cloud->height);
-
-    for (int i = 0; i < p1.size(); i++)
-        cloud->points[i] = p1[i];
-
-    for (int i = 0; i < p2.size(); i++)
-        cloud->points[i + p1.size()] = p2[i];
-}
-
-void SegFilter::convexHullCrop(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_bw,
-                               pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_vertices,
-                               pcl::PointCloud<pcl::PointXYZ>::Ptr &hull_result)
-{
-    pcl::CropHull<pcl::PointXYZ> cropHullFilter;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_hull(new pcl::PointCloud<pcl::PointXYZ>);
-    pcl::PointCloud<pcl::PointXYZ>::Ptr points_hull(new pcl::PointCloud<pcl::PointXYZ>);
-    std::vector<pcl::Vertices> hullPolygons;
-
-    // setup hull filter
-    pcl::ConvexHull<pcl::PointXYZ> cHull;
-    cHull.setInputCloud(cloud_vertices);
-    cHull.reconstruct(*points_hull, hullPolygons);
-
-    cropHullFilter.setHullIndices(hullPolygons);
-    cropHullFilter.setHullCloud(points_hull);
-    cropHullFilter.setCropOutside(true);
-
-    //filter points
-    cropHullFilter.setInputCloud(cloud_bw);
-    cropHullFilter.filter(*hull_result);
-}
-
-void SegFilter::refineCrop(pcl::PointCloud<pcl::PointXYZ>::Ptr &hull_result, pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_out,
-                           pcl::PointXYZ &point, Eigen::Vector3f &axis)
-{
-    pcl::ModelCoefficients plane;
-    float d = point.getVector3fMap().norm();
-    plane.values = {axis.x(), axis.y(), axis.z(), -d};
-
-    pcl::copyPointCloud(*hull_result, *cloud_out);
-    pcl::PointIndices::Ptr inliers(new pcl::PointIndices);
-
-    Eigen::Vector3f x0;
-    Eigen::Vector3f n(plane.values[0], plane.values[1], plane.values[2]);
-    float p = plane.values[3];
-    float distance;
-    int counterp = 0, counterm = 0;
-
-    for (int i = 0; i < cloud_out->size(); i++)
+    for (int i = 0; i < line2.values.size(); i++)
     {
-        if ((!std::isnan(cloud_out->points[i].x)) && (!std::isnan(cloud_out->points[i].y)) && (!std::isnan(cloud_out->points[i].z)))
-        {
-            x0 = cloud_out->points[i].getVector3fMap();
-            distance = n.dot(x0) + p;
-
-            if (distance > 0)
-                counterp++;
-            else
-            {
-                counterm++;
-                inliers->indices.push_back(i);
-            }
-        }
+        std::cout << line2.values[i] << std::endl;
     }
-
-    pcl::ExtractIndices<pcl::PointXYZ> extract;
-    extract.setInputCloud(cloud_out);
-    extract.setIndices(inliers);
-    extract.setNegative(true);
-    extract.filter(*cloud_out);
-
-    //std::cout << "counter positive " << counterp << ", counter neg " << counterm << std::endl;
-
-    /*
-    pcl::visualization::PCLVisualizer viz("plane");
-    viz.addCoordinateSystem(0.1, "coord");
-    viz.setBackgroundColor(0.0f, 0.0f, 0.5f);
-    viz.addPointCloud<pcl::PointXYZ>(cloud_out, "cloud_out");
-    viz.addPlane(plane, "plane");
-    viz.spin();
-    */
 }
+
+void SegFilter::transformation(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_out)
+{
+    float theta = 0.9075; // 0.9075 --- 52 deg
+
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.translation() << 0.0, 0.0, 0.0;
+    transform.rotate(Eigen::AngleAxisf(theta, Eigen::Vector3f::UnitX()));
+    pcl::transformPointCloud(*cloud, *cloud_out, transform);
+}
+*/

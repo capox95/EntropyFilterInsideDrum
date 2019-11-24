@@ -11,12 +11,48 @@
 #include "../include/pointpose.h"
 #include "../include/segmentation.h"
 
-//----------------------------------------------------------------------------- //
+/*
+____________________________________________
+
+sample1.pcd <---> sample13.pdc 
+orientation: 0.9075 rad, 52 deg
+line1: 0, 0.09, 0.11, 0, -0.787967, 0.615718;
+line2: 0, 0.09, 0.11, 0, 0.615718, 0.787967;
+
+data1.pcd <---> data4.pcd
+orientation: 0.7592 rad, 43.5 deg
+line1: 0, 0.04, 0.06, 0, -0.714004, 0.700142;
+line2: 0, 0.04, 0.06, 0, 0.700142, 0.714004;
+_____________________________________________
+
+*/
+
 int main(int argc, char **argv)
 {
+    //----------------------------------------------------
+    Eigen::Vector3f line1_pt, line1_dir, line2_pt, line2_dir;
+
+    line1_pt << 0, 0.09, 0.11;
+    line2_pt << 0, 0.09, 0.11;
+    line1_dir << 0, -0.787967, 0.615718;
+    line2_dir << 0, 0.615718, 0.787967;
+
+    //line1_pt << 0, 0.04, 0.06;
+    //line2_pt << 0, 0.04, 0.06;
+    //line1_dir << 0, -0.714004, 0.700142;
+    //line2_dir << 0, 0.700142, 0.714004;
+
+    pcl::ModelCoefficients axis;
+    axis.values = {line1_pt.x(), line1_pt.y(), line1_pt.z(), line1_dir.x(), line1_dir.y(), line1_dir.z()};
+
+    float distanceCenter = 0.4;
+    float radius = 0.25;
+    float depth = 0.3;
+    //----------------------------------------------------
 
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr source(new pcl::PointCloud<pcl::PointXYZRGB>);
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr source_filtered(new pcl::PointCloud<pcl::PointXYZRGB>);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr segfilter_cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
 
     if (pcl::io::loadPCDFile<pcl::PointXYZRGB>(argv[1], *source) == -1)
     {
@@ -27,32 +63,23 @@ int main(int argc, char **argv)
 
     SegFilter sf;
     sf.setSourceCloud(source);
-    sf.compute();
-    sf.visualizeSeg();
+    sf.setLine1(line1_pt, line1_dir);
+    sf.setLine2(line2_pt, line2_dir);
+    sf.setDistanceDrumCenter(distanceCenter);
+    sf.setDrumDimensions(radius, depth);
+    sf.compute(segfilter_cloud);
 
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr segfilter_cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
-    sf.getOutputCloud(segfilter_cloud);
-
-    pcl::ModelCoefficients axis;
-    sf.getDrumAxis(axis);
-
-    // ENTROPY FILTER -----------------------------------------------------------------------
-    //
     EntropyFilter ef;
     ef.setInputCloud(segfilter_cloud);
-    ef.setDownsampleLeafSize(0.0001); // size of the leaf for downsampling the cloud, value in meters. Default = 5 mm
-    ef.setEntropyThreshold(0.75);      // Segmentation performed for all points with normalized entropy value above this
-    ef.setKLocalSearch(500);          // Nearest Neighbour Local Search
-    ef.setCurvatureThreshold(0.03);   // Curvature Threshold for the computation of Entropy
-    ef.setDepthThreshold(0.23);       //0.29         // if the segment region has a value of depth lower than this -> not graspable (value in meters)
+    ef.setEntropyThreshold(0.75);        // Segmentation performed for all points with normalized entropy value above this
+    ef.setKLocalSearch(500);             // Nearest Neighbour Local Search
+    ef.setCurvatureThreshold(0.03);      // Curvature Threshold for the computation of Entropy
+    ef.setDepthThreshold(radius - 0.02); // 2 cm margin
     ef.setDrumAxis(axis);
 
     std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> clouds_result;
-    bool entropy_result = ef.compute(clouds_result);
-    if (entropy_result == false)
+    if (ef.compute(clouds_result) == false)
         return -1;
-
-    // GRASP POINT --------------------------------------------------------------------------
 
     PointPose pp;
     pp.setSourceCloud(source);
@@ -74,7 +101,7 @@ int main(int argc, char **argv)
         std::cout << "---------------------------------------------- " << std::endl;
     }
 
-    //-------------------------------------------------------------------------------------
+    sf.visualizeSeg();
     pp.visualizeGrasp();
     ef.visualizeAll(false);
 

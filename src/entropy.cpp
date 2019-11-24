@@ -34,6 +34,7 @@ pcl::PointCloud<pcl::Normal>::Ptr EntropyFilter::getMLSNormals() { return m_mls_
 bool EntropyFilter::compute(std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &clouds_out)
 {
     //downsample(m_source, m_leafsize, m_cloud_downsample);
+
     computePolyFitting(m_source, m_mls_points);
     divideCloudNormals(m_mls_points, m_mls_cloud, m_mls_normals);
     getSpherical(m_mls_normals, m_spherical);
