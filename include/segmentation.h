@@ -50,7 +50,7 @@ public:
     {
         radiusDrum_ = 0.25;
         distanceCenterDrum_ = 0.4;
-        drumDepth_ = 0.28;
+        drumDepth_ = 0.3;
     }
 
     void setSourceCloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud);

@@ -34,7 +34,7 @@ void SegFilter::compute()
     Eigen::Vector3f center = origin + axis_dir * distanceCenterDrum_;
     centerPoint_.getVector3fMap() = center;
 
-    segPoint1_.getVector3fMap() = center - (drumDepth_ / 1.5) * axis_dir;
+    segPoint1_.getVector3fMap() = center - (drumDepth_ / 2) * axis_dir;
     segPoint2_.getVector3fMap() = center + (drumDepth_ / 2) * axis_dir;
 
     Eigen::Vector3f vector_dir = {line2_.values[3], line2_.values[4], line2_.values[5]};
@@ -47,24 +47,42 @@ void SegFilter::compute()
     pcl::copyPointCloud(*source_, *source_bw_);
     convexHullCrop(source_bw_, hull_vertices_, hull_result_);
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_out(new pcl::PointCloud<pcl::PointXYZ>);
-    refineCrop(hull_result_, cloud_out, segPoint1_, axis_dir);
+    //pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_out(new pcl::PointCloud<pcl::PointXYZ>);
+    //refineCrop(hull_result_, cloud_out, segPoint1_, axis_dir);
 
-    pcl::copyPointCloud(*cloud_out, *cloud_output_);
+    pcl::copyPointCloud(*hull_result_, *cloud_output_);
 }
 
 void SegFilter::visualizeSeg(bool flagSpin)
 {
     pcl::visualization::PCLVisualizer vizSource("PCL Transformation");
-    vizSource.addCoordinateSystem(0.2, "coord");
-    vizSource.setBackgroundColor(0.0f, 0.0f, 0.5f);
+    //vizSource.addCoordinateSystem(0.1, "coord");
+    vizSource.setBackgroundColor(1.0f, 1.0f, 1.0f);
     vizSource.addPointCloud<pcl::PointXYZRGB>(source_, "source_");
+    vizSource.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 0.0f, 0.7f, 0.0f, "source_");
 
-    vizSource.addLine(line1_, "line1");
-    vizSource.addLine(line2_, "line2");
+    pcl::PointXYZ line1_0 = pcl::PointXYZ(line1_.values[0], line1_.values[1], line1_.values[2]);
+    pcl::PointXYZ line2_0 = pcl::PointXYZ(line2_.values[0], line2_.values[1], line2_.values[2]);
+
+    pcl::PointXYZ line1_1 = pcl::PointXYZ(line1_0.x + 0.75 * line1_.values[3],
+                                          line1_0.y + 0.75 * line1_.values[4],
+                                          line1_0.z + 0.75 * line1_.values[5]);
+    pcl::PointXYZ line2_1 = pcl::PointXYZ(line2_0.x + 0.25 * line2_.values[3],
+                                          line2_0.y + 0.25 * line2_.values[4],
+                                          line2_0.z + 0.25 * line2_.values[5]);
+
+    vizSource.addLine(line1_0, line1_1, 1.0f, 0.0f, 0.0f, "line1");
+    vizSource.addLine(line2_0, line2_1, 0.0f, 0.0f, 1.0f, "line2");
 
     vizSource.addPointCloud<pcl::PointXYZ>(hull_vertices_, "hull");
     vizSource.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 1.0f, 0.0f, 0.0f, "hull");
+    vizSource.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 4, "hull");
+
+    pcl::visualization::PCLVisualizer vizHull("PCL Result Hull");
+    //vizSource.addCoordinateSystem(0.1, "coord");
+    vizHull.setBackgroundColor(1.0f, 1.0f, 1.0f);
+    vizHull.addPointCloud<pcl::PointXYZ>(hull_result_, "hull_result_");
+    vizHull.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 1.0f, 0.0f, 0.0f, "hull_result_");
 
     if (flagSpin)
         vizSource.spin();
@@ -194,10 +212,10 @@ void SegFilter::combineHullPoints(std::vector<pcl::PointXYZ> &p1, std::vector<pc
     cloud->resize(cloud->width * cloud->height);
 
     for (int i = 0; i < p1.size(); i++)
-        cloud->points.push_back(p1[i]);
+        cloud->points[i] = p1[i];
 
     for (int i = 0; i < p2.size(); i++)
-        cloud->points.push_back(p2[i]);
+        cloud->points[i + p1.size()] = p2[i];
 }
 
 void SegFilter::convexHullCrop(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_bw,
@@ -210,27 +228,17 @@ void SegFilter::convexHullCrop(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_bw,
     std::vector<pcl::Vertices> hullPolygons;
 
     // setup hull filter
-    pcl::ConcaveHull<pcl::PointXYZ> cHull;
+    pcl::ConvexHull<pcl::PointXYZ> cHull;
     cHull.setInputCloud(cloud_vertices);
-    cHull.setDimension(3);
-    cHull.setAlpha(1.0);
     cHull.reconstruct(*points_hull, hullPolygons);
 
     cropHullFilter.setHullIndices(hullPolygons);
     cropHullFilter.setHullCloud(points_hull);
-    //cropHullFilter.setDim(3);
     cropHullFilter.setCropOutside(true);
 
     //filter points
     cropHullFilter.setInputCloud(cloud_bw);
     cropHullFilter.filter(*hull_result);
-
-    //std::cout << std::endl;
-    //std::cout << "hull result points: " << hull_result->points.size() << std::endl;
-    //for (int i = 0; i < hull_result->points.size(); i++)
-    //{
-    //    std::cout << hull_result->points[i] << std::endl;
-    //}
 }
 
 void SegFilter::refineCrop(pcl::PointCloud<pcl::PointXYZ>::Ptr &hull_result, pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_out,

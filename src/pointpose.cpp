@@ -92,16 +92,15 @@ void PointPose::visualizeGrasp()
 {
     pcl::visualization::PCLVisualizer viz("PCL Cloud Result");
     //viz.addCoordinateSystem(0.1);
-    viz.setBackgroundColor(0.0f, 0.0f, 0.5f);
+    viz.setBackgroundColor(1.0f, 1.0f, 1.0f);
     viz.addPointCloud<pcl::PointXYZRGB>(m_source, "source");
-    viz.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 0.2f, 0.0f, 1.0f, "source");
+    viz.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 0.0f, 0.7f, 0.0f, "source");
 
     for (int i = 0; i < m_clouds_vector.size(); i++)
     {
         viz.addPointCloud<pcl::PointXYZ>(m_clouds_vector[i], "cloud_grasp" + std::to_string(i));
-        viz.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "cloud_grasp" + std::to_string(i));
+        viz.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "cloud_grasp" + std::to_string(i));
         viz.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 1.0f, 1.0f, 0.0f, "cloud_grasp" + std::to_string(i));
-        viz.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "cloud_grasp" + std::to_string(i));
 
         viz.addSphere(m_cfp_viz[i].o, 0.005, "sphere" + std::to_string(i));
         viz.addArrow(m_cfp_viz[i].x, m_cfp_viz[i].o, 1.0f, 0.0f, 0.0f, false, "x_axis" + std::to_string(i));
@@ -111,25 +110,13 @@ void PointPose::visualizeGrasp()
         viz.addSphere(m_pointOnAxis[i], 0.01, 1.0f, 0.0f, 0.0f, "pointOnAxis" + std::to_string(i));
     }
 
-    viz.addLine(m_axis, "line");
+    pcl::PointXYZ line1_0 = pcl::PointXYZ(m_axis.values[0], m_axis.values[1], m_axis.values[2]);
 
-    //----------------
-    pcl::visualization::PCLVisualizer vizBest("PCL First Pose");
-    //viz.addCoordinateSystem(0.1);
-    vizBest.setBackgroundColor(0.0f, 0.0f, 0.5f);
-    vizBest.addPointCloud<pcl::PointXYZRGB>(m_source, "source");
-    vizBest.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 0.2f, 0.0f, 1.0f, "source");
+    pcl::PointXYZ line1_1 = pcl::PointXYZ(line1_0.x + 0.75 * m_axis.values[3],
+                                          line1_0.y + 0.75 * m_axis.values[4],
+                                          line1_0.z + 0.75 * m_axis.values[5]);
 
-    vizBest.addPointCloud<pcl::PointXYZ>(m_clouds_vector[0], "cloud_grasp_best");
-    vizBest.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "cloud_grasp_best");
-    vizBest.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 1.0f, 1.0f, 0.0f, "cloud_grasp_best");
-    vizBest.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "cloud_grasp_best");
-
-    vizBest.addSphere(m_cfp_viz[0].o, 0.005, "sphere_best");
-    vizBest.addArrow(m_cfp_viz[0].x, m_cfp_viz[0].o, 1.0f, 0.0f, 0.0f, false, "x_axis_best");
-    vizBest.addArrow(m_cfp_viz[0].y, m_cfp_viz[0].o, 0.0f, 1.0f, 0.0f, false, "y_axis_best");
-    vizBest.addArrow(m_cfp_viz[0].z, m_cfp_viz[0].o, 0.0f, 0.0f, 1.0f, false, "z_axis_best");
-    vizBest.addSphere(m_pointOnAxis[0], 0.01, 1.0f, 0.0f, 0.0f, "pointOnAxis_best");
+    viz.addLine(line1_0, line1_1, 1.0f, 0.0f, 0.0f, "line1");
 }
 
 std::vector<int> PointPose::orderEigenvalues(Eigen::Vector3f eigenValuesPCA)
