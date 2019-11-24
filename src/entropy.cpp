@@ -13,25 +13,21 @@
 
 #include "../include/entropy.h"
 
-void EntropyFilter::setInputCloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud_in) { m_source = cloud_in; }
+void EntropyFilterDrum::setInputCloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud_in) { m_source = cloud_in; }
 
-void EntropyFilter::setDrumAxis(pcl::ModelCoefficients line) { m_line = line; }
+void EntropyFilterDrum::setDrumAxis(pcl::ModelCoefficients line) { m_line = line; }
 
-void EntropyFilter::setDownsampleLeafSize(float leaf_size) { m_leafsize = leaf_size; }
+void EntropyFilterDrum::setEntropyThreshold(float entropy_th) { m_entropy_threshold = entropy_th; }
 
-void EntropyFilter::setEntropyThreshold(float entropy_th) { m_entropy_threshold = entropy_th; }
+void EntropyFilterDrum::setKLocalSearch(int K) { m_KNN = K; }
 
-void EntropyFilter::setKLocalSearch(int K) { m_KNN = K; }
+void EntropyFilterDrum::setCurvatureThreshold(float curvature_th) { m_curvature_threshold = curvature_th; }
 
-void EntropyFilter::setCurvatureThreshold(float curvature_th) { m_curvature_threshold = curvature_th; }
+void EntropyFilterDrum::setDepthThreshold(float depth_th) { m_depth_threshold = depth_th; };
 
-void EntropyFilter::setDepthThreshold(float depth_th) { m_depth_threshold = depth_th; };
+void EntropyFilterDrum::setDrumRadius(float radius) { m_drum_radius = radius; };
 
-pcl::PointCloud<pcl::PointXYZ>::Ptr EntropyFilter::getMLSCloud() { return m_mls_cloud; }
-
-pcl::PointCloud<pcl::Normal>::Ptr EntropyFilter::getMLSNormals() { return m_mls_normals; }
-
-bool EntropyFilter::compute(std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &clouds_out)
+bool EntropyFilterDrum::compute(std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &clouds_out)
 {
     //downsample(m_source, m_leafsize, m_cloud_downsample);
 
@@ -40,6 +36,9 @@ bool EntropyFilter::compute(std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &cl
     getSpherical(m_mls_normals, m_spherical);
 
     //Depth
+
+    // update depth interval
+    m_depth_interval = m_drum_radius - m_depth_threshold;
     computeDepthMap(m_mls_cloud, m_cloud_depth, m_line);
 
     //Combine
@@ -74,76 +73,8 @@ bool EntropyFilter::compute(std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &cl
     return true;
 }
 
-//
-//ColorMap functions
-void EntropyFilter::colorMapEntropy(pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud_map)
+void EntropyFilterDrum::visualizeAll(bool flag)
 {
-    cloud_map->width = m_mls_cloud->width;
-    cloud_map->height = m_mls_cloud->height;
-    cloud_map->resize(m_mls_cloud->width * m_mls_cloud->height);
-
-    for (int i = 0; i < m_mls_cloud->size(); i++)
-    {
-        cloud_map->points[i].x = m_mls_cloud->points[i].x;
-        cloud_map->points[i].y = m_mls_cloud->points[i].y;
-        cloud_map->points[i].z = m_mls_cloud->points[i].z;
-        cloud_map->points[i].intensity = m_spherical->points[i].entropy;
-    }
-}
-
-void EntropyFilter::colorMapCurvature(pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud_map)
-{
-    cloud_map->width = m_mls_cloud->width;
-    cloud_map->height = m_mls_cloud->height;
-    cloud_map->resize(m_mls_cloud->width * m_mls_cloud->height);
-
-    for (int i = 0; i < m_mls_cloud->size(); i++)
-    {
-        cloud_map->points[i].x = m_mls_cloud->points[i].x;
-        cloud_map->points[i].y = m_mls_cloud->points[i].y;
-        cloud_map->points[i].z = m_mls_cloud->points[i].z;
-        cloud_map->points[i].intensity = m_mls_normals->points[i].curvature;
-    }
-}
-
-void EntropyFilter::colorMapInclination(pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud_map)
-{
-    cloud_map->width = m_mls_cloud->width;
-    cloud_map->height = m_mls_cloud->height;
-    cloud_map->resize(m_mls_cloud->width * m_mls_cloud->height);
-
-    for (int i = 0; i < m_mls_cloud->size(); i++)
-    {
-        cloud_map->points[i].x = m_mls_cloud->points[i].x;
-        cloud_map->points[i].y = m_mls_cloud->points[i].y;
-        cloud_map->points[i].z = m_mls_cloud->points[i].z;
-        cloud_map->points[i].intensity = m_spherical->points[i].inclination;
-    }
-}
-
-void EntropyFilter::colorMapAzimuth(pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud_map)
-{
-    cloud_map->width = m_mls_cloud->width;
-    cloud_map->height = m_mls_cloud->height;
-    cloud_map->resize(m_mls_cloud->width * m_mls_cloud->height);
-
-    for (int i = 0; i < m_mls_cloud->size(); i++)
-    {
-        cloud_map->points[i].x = m_mls_cloud->points[i].x;
-        cloud_map->points[i].y = m_mls_cloud->points[i].y;
-        cloud_map->points[i].z = m_mls_cloud->points[i].z;
-        cloud_map->points[i].intensity = m_spherical->points[i].azimuth;
-    }
-}
-
-void EntropyFilter::visualizeAll(bool flag)
-{
-
-    //pcl::visualization::PCLVisualizer vizSource("PCL Source Cloud");
-    //vizSource.addCoordinateSystem(0.2, "coord");
-    //vizSource.setBackgroundColor(1.0f, 1.0f, 1.0f);
-    //vizSource.addPointCloud<pcl::PointXYZRGB>(m_source, "m_source");
-    //vizSource.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 0.0f, 1.0f, 0.0f, "m_source");
 
     pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_curvature(new pcl::PointCloud<pcl::PointXYZI>);
     colorMapCurvature(cloud_curvature);
@@ -183,14 +114,6 @@ void EntropyFilter::visualizeAll(bool flag)
     pcl::visualization::PointCloudColorHandlerGenericField<pcl::PointXYZI> intensity_distributionDepth(m_cloud_depth, "intensity");
     vizDepth.addPointCloud<pcl::PointXYZI>(m_cloud_depth, intensity_distributionDepth, "cloud_depth");
     vizDepth.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "cloud_depth");
-    //viz2.addPlane(*coefficients, "plane");
-
-    //pcl::visualization::PCLVisualizer vizConvexity("PCL Convexity Map");
-    //vizConvexity.setBackgroundColor(1.0f, 1.0f, 1.0f);
-    //pcl::visualization::PointCloudColorHandlerGenericField<pcl::PointXYZI> intensity_distribution(m_cloud_convexity, "intensity");
-    //vizConvexity.addPointCloud<pcl::PointXYZI>(m_cloud_convexity, intensity_distribution, "cloud_convexity");
-    //vizConvexity.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "cloud_convexity");
-    //viz.addPointCloudNormals<pcl::PointXYZ, pcl::Normal>(cloud_small, normals_small, 1, 0.01);
 
     pcl::visualization::PCLVisualizer vizCombined("PCL Combined Map");
     vizCombined.setBackgroundColor(1.0f, 1.0f, 1.0f);
@@ -205,16 +128,7 @@ void EntropyFilter::visualizeAll(bool flag)
     }
 }
 
-void EntropyFilter::downsample(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud_in, float leaf_size,
-                               pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud_out)
-{
-    pcl::VoxelGrid<pcl::PointXYZRGB> vox_grid;
-    vox_grid.setLeafSize(leaf_size, leaf_size, leaf_size);
-    vox_grid.setInputCloud(cloud_in);
-    vox_grid.filter(*cloud_out);
-}
-
-void EntropyFilter::computePolyFitting(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud, pcl::PointCloud<pcl::PointNormal> &mls_points)
+void EntropyFilterDrum::computePolyFitting(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud, pcl::PointCloud<pcl::PointNormal> &mls_points)
 {
     // Output has the PointNormal type in order to store the normals calculated by MLS
 
@@ -237,8 +151,8 @@ void EntropyFilter::computePolyFitting(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &c
     mls.process(mls_points);
 }
 
-void EntropyFilter::divideCloudNormals(pcl::PointCloud<pcl::PointNormal> &input, pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
-                                       pcl::PointCloud<pcl::Normal>::Ptr &normals)
+void EntropyFilterDrum::divideCloudNormals(pcl::PointCloud<pcl::PointNormal> &input, pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
+                                           pcl::PointCloud<pcl::Normal>::Ptr &normals)
 {
     cloud->height = input.height;
     cloud->width = input.width;
@@ -259,7 +173,7 @@ void EntropyFilter::divideCloudNormals(pcl::PointCloud<pcl::PointNormal> &input,
     }
 }
 
-void EntropyFilter::getSpherical(pcl::PointCloud<pcl::Normal>::Ptr &cloud_normals, pcl::PointCloud<Spherical>::Ptr &spherical)
+void EntropyFilterDrum::getSpherical(pcl::PointCloud<pcl::Normal>::Ptr &cloud_normals, pcl::PointCloud<Spherical>::Ptr &spherical)
 {
     spherical->width = cloud_normals->width;
     spherical->height = cloud_normals->height;
@@ -274,7 +188,7 @@ void EntropyFilter::getSpherical(pcl::PointCloud<pcl::Normal>::Ptr &cloud_normal
     }
 }
 
-void EntropyFilter::normalizeEntropy(pcl::PointCloud<Spherical>::Ptr &spherical)
+void EntropyFilterDrum::normalizeEntropy(pcl::PointCloud<Spherical>::Ptr &spherical)
 {
 
     float max_entropy = 0;
@@ -296,7 +210,7 @@ void EntropyFilter::normalizeEntropy(pcl::PointCloud<Spherical>::Ptr &spherical)
 //param[in]: point cloud normals in spherical coordinates
 //param[in]: current point index in the cloud
 //param[in]: vector of indeces of neighborhood points of considered on
-void EntropyFilter::histogram2D(pcl::PointCloud<Spherical>::Ptr &spherical, int id0, std::vector<int> indices)
+void EntropyFilterDrum::histogram2D(pcl::PointCloud<Spherical>::Ptr &spherical, int id0, std::vector<int> indices)
 {
     int Hist[64][64] = {0};
     float step_inc = M_PI / 63;
@@ -351,8 +265,8 @@ void EntropyFilter::histogram2D(pcl::PointCloud<Spherical>::Ptr &spherical, int 
 }
 
 // LOCAL SEARCH
-void EntropyFilter::local_search(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, pcl::PointCloud<Spherical>::Ptr &spherical,
-                                 pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud_combined)
+void EntropyFilterDrum::local_search(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, pcl::PointCloud<Spherical>::Ptr &spherical,
+                                     pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud_combined)
 {
     pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
     kdtree.setInputCloud(cloud);
@@ -383,8 +297,8 @@ void EntropyFilter::local_search(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, pcl
     }
 }
 
-void EntropyFilter::segmentCloudEntropy(pcl::PointCloud<pcl::PointNormal> &cloud, pcl::PointCloud<Spherical>::Ptr &spherical,
-                                        pcl::PointCloud<pcl::PointXYZI>::Ptr &output, float thresholdEntropy)
+void EntropyFilterDrum::segmentCloudEntropy(pcl::PointCloud<pcl::PointNormal> &cloud, pcl::PointCloud<Spherical>::Ptr &spherical,
+                                            pcl::PointCloud<pcl::PointXYZI>::Ptr &output, float thresholdEntropy)
 {
     pcl::PointXYZI p;
     for (int i = 0; i < spherical->size(); i++)
@@ -401,8 +315,8 @@ void EntropyFilter::segmentCloudEntropy(pcl::PointCloud<pcl::PointNormal> &cloud
     std::cout << "cloud segmented size: " << output->size() << std::endl;
 }
 
-void EntropyFilter::connectedComponets(pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud,
-                                       std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &cloud_clusters)
+void EntropyFilterDrum::connectedComponets(pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud,
+                                           std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &cloud_clusters)
 {
     // Creating the KdTree object for the search method of the extraction
     pcl::search::KdTree<pcl::PointXYZI>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZI>);
@@ -436,8 +350,8 @@ void EntropyFilter::connectedComponets(pcl::PointCloud<pcl::PointXYZI>::Ptr &clo
     std::cout << "number of clusters found: " << cluster_indices.size() << std::endl;
 }
 
-void EntropyFilter::alternativeConnectedComponets(pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud,
-                                                  std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &cloud_clusters)
+void EntropyFilterDrum::alternativeConnectedComponets(pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud,
+                                                      std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &cloud_clusters)
 {
 
     for (int j = 0; j < cloud->size(); j++)
@@ -496,8 +410,8 @@ void EntropyFilter::alternativeConnectedComponets(pcl::PointCloud<pcl::PointXYZI
     std::cout << "number of clusters: " << cloud_clusters.size() << std::endl;
 }
 
-void EntropyFilter::splitPointNormal(pcl::PointCloud<pcl::PointNormal>::Ptr &input, pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
-                                     pcl::PointCloud<pcl::Normal>::Ptr &normals)
+void EntropyFilterDrum::splitPointNormal(pcl::PointCloud<pcl::PointNormal>::Ptr &input, pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
+                                         pcl::PointCloud<pcl::Normal>::Ptr &normals)
 {
     cloud->height = input->height;
     cloud->width = input->width;
@@ -518,9 +432,9 @@ void EntropyFilter::splitPointNormal(pcl::PointCloud<pcl::PointNormal>::Ptr &inp
     }
 }
 
-void EntropyFilter::computeDepthMap(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
-                                    pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud_out,
-                                    pcl::ModelCoefficients &line)
+void EntropyFilterDrum::computeDepthMap(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
+                                        pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud_out,
+                                        pcl::ModelCoefficients &line)
 {
     cloud_out->width = cloud->width;
     cloud_out->height = cloud->height;
@@ -554,9 +468,9 @@ void EntropyFilter::computeDepthMap(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
     }
 }
 
-void EntropyFilter::combineDepthAndCurvatureInfo(pcl::PointCloud<pcl::PointXYZI>::Ptr &depth,
-                                                 pcl::PointCloud<pcl::Normal>::Ptr &normals,
-                                                 pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud_map)
+void EntropyFilterDrum::combineDepthAndCurvatureInfo(pcl::PointCloud<pcl::PointXYZI>::Ptr &depth,
+                                                     pcl::PointCloud<pcl::Normal>::Ptr &normals,
+                                                     pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud_map)
 {
     if (depth->size() != normals->size())
         PCL_WARN("Depth and Normal Clouds are of different size!\n");
@@ -570,9 +484,9 @@ void EntropyFilter::combineDepthAndCurvatureInfo(pcl::PointCloud<pcl::PointXYZI>
     float value;
     for (int i = 0; i < normals->size(); i++)
     {
-        if (normals->points[i].curvature >= m_curvature_threshold && depth->points[i].intensity <= m_depth_threshold)
+        if (normals->points[i].curvature >= m_curvature_threshold && depth->points[i].intensity <= m_depth_interval)
         {
-            value = (m_depth_threshold - depth->points[i].intensity) * 50;
+            value = (m_depth_interval - depth->points[i].intensity) * 50;
             cloud_map->points[i].intensity = value;
         }
         else
@@ -583,5 +497,67 @@ void EntropyFilter::combineDepthAndCurvatureInfo(pcl::PointCloud<pcl::PointXYZI>
         cloud_map->points[i].x = depth->points[i].x;
         cloud_map->points[i].y = depth->points[i].y;
         cloud_map->points[i].z = depth->points[i].z;
+    }
+}
+
+//
+//ColorMap functions
+void EntropyFilterDrum::colorMapEntropy(pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud_map)
+{
+    cloud_map->width = m_mls_cloud->width;
+    cloud_map->height = m_mls_cloud->height;
+    cloud_map->resize(m_mls_cloud->width * m_mls_cloud->height);
+
+    for (int i = 0; i < m_mls_cloud->size(); i++)
+    {
+        cloud_map->points[i].x = m_mls_cloud->points[i].x;
+        cloud_map->points[i].y = m_mls_cloud->points[i].y;
+        cloud_map->points[i].z = m_mls_cloud->points[i].z;
+        cloud_map->points[i].intensity = m_spherical->points[i].entropy;
+    }
+}
+
+void EntropyFilterDrum::colorMapCurvature(pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud_map)
+{
+    cloud_map->width = m_mls_cloud->width;
+    cloud_map->height = m_mls_cloud->height;
+    cloud_map->resize(m_mls_cloud->width * m_mls_cloud->height);
+
+    for (int i = 0; i < m_mls_cloud->size(); i++)
+    {
+        cloud_map->points[i].x = m_mls_cloud->points[i].x;
+        cloud_map->points[i].y = m_mls_cloud->points[i].y;
+        cloud_map->points[i].z = m_mls_cloud->points[i].z;
+        cloud_map->points[i].intensity = m_mls_normals->points[i].curvature;
+    }
+}
+
+void EntropyFilterDrum::colorMapInclination(pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud_map)
+{
+    cloud_map->width = m_mls_cloud->width;
+    cloud_map->height = m_mls_cloud->height;
+    cloud_map->resize(m_mls_cloud->width * m_mls_cloud->height);
+
+    for (int i = 0; i < m_mls_cloud->size(); i++)
+    {
+        cloud_map->points[i].x = m_mls_cloud->points[i].x;
+        cloud_map->points[i].y = m_mls_cloud->points[i].y;
+        cloud_map->points[i].z = m_mls_cloud->points[i].z;
+        cloud_map->points[i].intensity = m_spherical->points[i].inclination;
+    }
+}
+
+void EntropyFilterDrum::colorMapAzimuth(pcl::PointCloud<pcl::PointXYZI>::Ptr &cloud_map)
+{
+    cloud_map->width = m_mls_cloud->width;
+    cloud_map->height = m_mls_cloud->height;
+    cloud_map->resize(m_mls_cloud->width * m_mls_cloud->height);
+
+    for (int i = 0; i < m_mls_cloud->size(); i++)
+    {
+        cloud_map->points[i].x = m_mls_cloud->points[i].x;
+        cloud_map->points[i].y = m_mls_cloud->points[i].y;
+        cloud_map->points[i].z = m_mls_cloud->points[i].z;
+        cloud_map->points[i].intensity = m_spherical->points[i].azimuth;
     }
 }

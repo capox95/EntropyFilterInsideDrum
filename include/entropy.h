@@ -7,40 +7,31 @@ struct Spherical
     float entropy_normalized;
 };
 
-class EntropyFilter
+class EntropyFilterDrum
 {
 
 private:
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_source, m_cloud_downsample;
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr m_source;
     pcl::PointCloud<pcl::PointNormal> m_mls_points;
-    pcl::PointCloud<pcl::PointNormal>::Ptr m_convexity_ready;
-    pcl::PointCloud<pcl::PointXYZ>::Ptr m_mls_cloud, m_top_vertices;
-    pcl::PointCloud<pcl::PointXYZI>::Ptr m_cloud_depth, m_cloud_convexity, m_cloud_combined, m_cloud_seg;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr m_mls_cloud;
+    pcl::PointCloud<pcl::PointXYZI>::Ptr m_cloud_depth, m_cloud_combined, m_cloud_seg;
     pcl::PointCloud<pcl::Normal>::Ptr m_mls_normals;
     pcl::PointCloud<Spherical>::Ptr m_spherical;
 
-    pcl::ModelCoefficients::Ptr m_plane, m_plane_top;
     pcl::ModelCoefficients m_line;
 
-    float m_leafsize, m_entropy_threshold, m_curvature_threshold,
-        m_depth_interval, m_depth_threshold, m_angle_threshold, _max_entropy;
+    float m_drum_radius, m_entropy_threshold, m_curvature_threshold, m_depth_interval, m_depth_threshold, _max_entropy;
     int m_KNN;
     bool _flag_vertices;
 
 public:
-    EntropyFilter() : m_source(new pcl::PointCloud<pcl::PointXYZRGB>),
-                      m_cloud_downsample(new pcl::PointCloud<pcl::PointXYZRGB>),
-                      m_mls_cloud(new pcl::PointCloud<pcl::PointXYZ>),
-                      m_mls_normals(new pcl::PointCloud<pcl::Normal>),
-                      m_spherical(new pcl::PointCloud<Spherical>),
-                      m_cloud_seg(new pcl::PointCloud<pcl::PointXYZI>),
-                      m_top_vertices(new pcl::PointCloud<pcl::PointXYZ>),
-                      m_cloud_depth(new pcl::PointCloud<pcl::PointXYZI>),
-                      m_cloud_convexity(new pcl::PointCloud<pcl::PointXYZI>),
-                      m_cloud_combined(new pcl::PointCloud<pcl::PointXYZI>),
-                      m_convexity_ready(new pcl::PointCloud<pcl::PointNormal>),
-                      m_plane(new pcl::ModelCoefficients),
-                      m_plane_top(new pcl::ModelCoefficients)
+    EntropyFilterDrum() : m_source(new pcl::PointCloud<pcl::PointXYZRGB>),
+                          m_mls_cloud(new pcl::PointCloud<pcl::PointXYZ>),
+                          m_mls_normals(new pcl::PointCloud<pcl::Normal>),
+                          m_spherical(new pcl::PointCloud<Spherical>),
+                          m_cloud_seg(new pcl::PointCloud<pcl::PointXYZI>),
+                          m_cloud_depth(new pcl::PointCloud<pcl::PointXYZI>),
+                          m_cloud_combined(new pcl::PointCloud<pcl::PointXYZI>)
 
     {
         _flag_vertices = false;
@@ -60,9 +51,7 @@ public:
 
     void setDepthThreshold(float depth_th);
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr getMLSCloud();
-
-    pcl::PointCloud<pcl::Normal>::Ptr getMLSNormals();
+    void setDrumRadius(float radius);
 
     bool compute(std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &clouds_out);
 
@@ -79,9 +68,6 @@ public:
     void visualizeAll(bool flag);
 
 private:
-    void downsample(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud_in, float leaf_size,
-                    pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud_out);
-
     void computePolyFitting(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud, pcl::PointCloud<pcl::PointNormal> &mls_points);
 
     void divideCloudNormals(pcl::PointCloud<pcl::PointNormal> &input, pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,

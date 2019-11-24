@@ -69,19 +69,20 @@ int main(int argc, char **argv)
     sf.setDrumDimensions(radius, depth);
     sf.compute(segfilter_cloud);
 
-    EntropyFilter ef;
+    EntropyFilterDrum ef;
     ef.setInputCloud(segfilter_cloud);
-    ef.setEntropyThreshold(0.75);        // Segmentation performed for all points with normalized entropy value above this
-    ef.setKLocalSearch(500);             // Nearest Neighbour Local Search
-    ef.setCurvatureThreshold(0.03);      // Curvature Threshold for the computation of Entropy
-    ef.setDepthThreshold(radius - 0.02); // 2 cm margin
+    ef.setEntropyThreshold(0.75);   // Segmentation performed for all points with normalized entropy value above this
+    ef.setKLocalSearch(500);        // Nearest Neighbour Local Search
+    ef.setCurvatureThreshold(0.03); // Curvature Threshold for the computation of Entropy
+    ef.setDepthThreshold(0.02);     // 2 cm margin
+    ef.setDrumRadius(radius);
     ef.setDrumAxis(axis);
 
     std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> clouds_result;
     if (ef.compute(clouds_result) == false)
         return -1;
 
-    PointPose pp;
+    PointPoseDrum pp;
     pp.setSourceCloud(source);
     pp.setInputVectorClouds(clouds_result);
     pp.setDrumAxis(axis);

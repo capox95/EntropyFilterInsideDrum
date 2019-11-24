@@ -11,29 +11,15 @@
 
 #include "../include/pointpose.h"
 
-void PointPose::setSourceCloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud_in) { m_source = cloud_in; }
+void PointPoseDrum::setSourceCloud(pcl::PointCloud<pcl::PointXYZRGB>::Ptr &cloud_in) { m_source = cloud_in; }
 
-void PointPose::setInputCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud) { m_cloud_grasp = cloud; }
+void PointPoseDrum::setInputCloud(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud) { m_cloud_grasp = cloud; }
 
-void PointPose::setDrumAxis(pcl::ModelCoefficients &axis) { m_axis = axis; }
+void PointPoseDrum::setDrumAxis(pcl::ModelCoefficients &axis) { m_axis = axis; }
 
-void PointPose::setInputVectorClouds(std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &clouds) { m_clouds_vector = clouds; }
+void PointPoseDrum::setInputVectorClouds(std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &clouds) { m_clouds_vector = clouds; }
 
-Eigen::Vector3f PointPose::getTranslation() { return m_trans; }
-
-Eigen::Quaternionf PointPose::getRotation() { return m_rot; }
-
-Eigen::Vector3f PointPose::getDirectionWrinkle()
-{
-    Eigen::Vector3f value;
-    value.x() = m_line.values[3];
-    value.y() = m_line.values[4];
-    value.z() = m_line.values[5];
-
-    return value;
-}
-
-int PointPose::compute(Vector3fVector &pointsOnAxis, Affine3dVector &transformation_matrix_vector)
+int PointPoseDrum::compute(Vector3fVector &pointsOnAxis, Affine3dVector &transformation_matrix_vector)
 {
     Eigen::Affine3d matrix;
     Eigen::Vector3f point;
@@ -48,8 +34,8 @@ int PointPose::compute(Vector3fVector &pointsOnAxis, Affine3dVector &transformat
     return counter;
 }
 
-bool PointPose::computeGraspPoint(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
-                                  Eigen::Vector3f &point, Eigen::Affine3d &transformation_matrix)
+bool PointPoseDrum::computeGraspPoint(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
+                                      Eigen::Vector3f &point, Eigen::Affine3d &transformation_matrix)
 {
 
     Eigen::Vector4f centroid;
@@ -88,7 +74,7 @@ bool PointPose::computeGraspPoint(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
     return true;
 }
 
-void PointPose::visualizeGrasp()
+void PointPoseDrum::visualizeGrasp()
 {
     pcl::visualization::PCLVisualizer viz("PCL Cloud Result");
     //viz.addCoordinateSystem(0.1);
@@ -119,7 +105,7 @@ void PointPose::visualizeGrasp()
     viz.addLine(line1_0, line1_1, 1.0f, 0.0f, 0.0f, "line1");
 }
 
-std::vector<int> PointPose::orderEigenvalues(Eigen::Vector3f eigenValuesPCA)
+std::vector<int> PointPoseDrum::orderEigenvalues(Eigen::Vector3f eigenValuesPCA)
 {
     std::vector<double> v;
     v.push_back(eigenValuesPCA[0]);
@@ -148,8 +134,8 @@ std::vector<int> PointPose::orderEigenvalues(Eigen::Vector3f eigenValuesPCA)
     return result;
 }
 
-void PointPose::getCoordinateFrame(Eigen::Vector3f &centroid, Eigen::Matrix3f &rotation, pcl::PointXYZ &pointOnTheLine,
-                                   Eigen::Vector3f &directionX, Eigen::Vector3f &directionZ)
+void PointPoseDrum::getCoordinateFrame(Eigen::Vector3f &centroid, Eigen::Matrix3f &rotation, pcl::PointXYZ &pointOnTheLine,
+                                       Eigen::Vector3f &directionX, Eigen::Vector3f &directionZ)
 {
     bool reverse = false;
 
@@ -192,7 +178,7 @@ void PointPose::getCoordinateFrame(Eigen::Vector3f &centroid, Eigen::Matrix3f &r
     computeCoordinateFramePointsViz(centroid, rotation, reverse);
 }
 
-void PointPose::computeCoordinateFramePointsViz(Eigen::Vector3f &centroid, Eigen::Matrix3f &rotation, bool reverse)
+void PointPoseDrum::computeCoordinateFramePointsViz(Eigen::Vector3f &centroid, Eigen::Matrix3f &rotation, bool reverse)
 {
     float factor = 0.1;
     pcl::PointXYZ centroidXYZ;
@@ -226,7 +212,7 @@ void PointPose::computeCoordinateFramePointsViz(Eigen::Vector3f &centroid, Eigen
     m_cfp_viz.push_back(points);
 }
 
-Eigen::Affine3d PointPose::computeTransformation(Eigen::Vector3f &centroid, Eigen::Vector3f &directionX, Eigen::Vector3f &directionZ)
+Eigen::Affine3d PointPoseDrum::computeTransformation(Eigen::Vector3f &centroid, Eigen::Vector3f &directionX, Eigen::Vector3f &directionZ)
 {
     Eigen::VectorXd from_line_x, from_line_z, to_line_x, to_line_z;
 
@@ -253,8 +239,8 @@ Eigen::Affine3d PointPose::computeTransformation(Eigen::Vector3f &centroid, Eige
     return transformation;
 }
 
-void PointPose::computeRefPlane(pcl::ModelCoefficients &axis, Eigen::Vector4f &centroid,
-                                pcl::ModelCoefficients &plane, pcl::PointXYZ &pointOnTheLine)
+void PointPoseDrum::computeRefPlane(pcl::ModelCoefficients &axis, Eigen::Vector4f &centroid,
+                                    pcl::ModelCoefficients &plane, pcl::PointXYZ &pointOnTheLine)
 {
     Eigen::Vector3f line_pt, line_dir;
 
@@ -278,8 +264,8 @@ void PointPose::computeRefPlane(pcl::ModelCoefficients &axis, Eigen::Vector4f &c
     plane.values = {normal.x(), normal.y(), normal.z(), -0.1};
 }
 
-void PointPose::projectPointsOntoPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, pcl::ModelCoefficients &plane,
-                                       pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_projected)
+void PointPoseDrum::projectPointsOntoPlane(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, pcl::ModelCoefficients &plane,
+                                           pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_projected)
 {
     pcl::ModelCoefficients::Ptr plane_ptr(new pcl::ModelCoefficients);
     plane_ptr->values = plane.values;

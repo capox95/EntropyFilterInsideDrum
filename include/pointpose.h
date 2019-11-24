@@ -14,7 +14,7 @@ struct CoordinateFramePoints
     pcl::PointXYZ o;
 };
 
-class PointPose
+class PointPoseDrum
 {
 
 private:
@@ -37,9 +37,9 @@ private:
     Eigen::Vector3f _directionX, _directionY, _directionZ, centroid_centroid;
 
 public:
-    PointPose() : m_source(new pcl::PointCloud<pcl::PointXYZRGB>),
-                  m_cloud_grasp(new pcl::PointCloud<pcl::PointXYZ>),
-                  m_cloud_projected(new pcl::PointCloud<pcl::PointXYZ>)
+    PointPoseDrum() : m_source(new pcl::PointCloud<pcl::PointXYZRGB>),
+                      m_cloud_grasp(new pcl::PointCloud<pcl::PointXYZ>),
+                      m_cloud_projected(new pcl::PointCloud<pcl::PointXYZ>)
 
     {
     }
@@ -52,12 +52,6 @@ public:
 
     void setInputVectorClouds(std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &clouds);
 
-    Eigen::Vector3f getTranslation();
-
-    Eigen::Quaternionf getRotation();
-
-    Eigen::Vector3f getDirectionWrinkle();
-
     int compute(Vector3fVector &pointsOnAxis, Affine3dVector &transformation_matrix_vector);
 
     bool computeGraspPoint(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud,
@@ -69,7 +63,7 @@ private:
     std::vector<int> orderEigenvalues(Eigen::Vector3f eigenValuesPCA);
 
     void getCoordinateFrame(Eigen::Vector3f &centroid, Eigen::Matrix3f &rotation, pcl::PointXYZ &pointOnTheLine,
-     Eigen::Vector3f &directionX, Eigen::Vector3f &directionZ);
+                            Eigen::Vector3f &directionX, Eigen::Vector3f &directionZ);
 
     Eigen::Affine3d computeTransformation(Eigen::Vector3f &centroid, Eigen::Vector3f &directionX, Eigen::Vector3f &directionZ);
 
