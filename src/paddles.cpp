@@ -75,7 +75,7 @@ int main(int argc, char **argv)
 
               */
 
-    dm.visualizeBasketModel(scene, false, true, true);
+    dm.visualizeBasketModel(scene, false, false, false);
 
     return (0);
 }

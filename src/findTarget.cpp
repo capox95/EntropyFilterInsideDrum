@@ -41,7 +41,7 @@ bool FindTarget::compute()
     align.setMaximumIterations(50000);               // Number of RANSAC iterations
     align.setNumberOfSamples(3);                     // Number of points to sample for generating/prerejecting a pose
     align.setCorrespondenceRandomness(5);            // Number of nearest features to use
-    align.setSimilarityThreshold(0.95f);             // Polygonal edge length similarity threshold
+    align.setSimilarityThreshold(0.90f);             // Polygonal edge length similarity threshold
     align.setMaxCorrespondenceDistance(2.5f * leaf); // Inlier threshold
     align.setInlierFraction(0.25f);                  // Required inlier fraction for accepting a pose hypothesis
     {
