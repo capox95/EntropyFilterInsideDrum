@@ -75,13 +75,7 @@ pcl/io/pcd_io.h
 -
 pcl/visualization/cloud_viewer.h
 -
-pcl/filters/radius_outlier_removal.h
--
-pcl/filters/passthrough.h
--
-chrono
--
-ctime
+pcl/common/time.h
 -
 ../include/entropy.h
 /home/alessio/dev/EntropyInside/include/entropy.h
@@ -1606,20 +1600,8 @@ pcl/pcl_macros.h
 pcl/filters/filter_indices.h
 -
 
-/usr/local/include/pcl-1.9/pcl/filters/impl/passthrough.hpp
-pcl/filters/passthrough.h
--
-pcl/common/io.h
--
-
 /usr/local/include/pcl-1.9/pcl/filters/impl/project_inliers.hpp
 pcl/filters/project_inliers.h
--
-
-/usr/local/include/pcl-1.9/pcl/filters/impl/radius_outlier_removal.hpp
-pcl/filters/radius_outlier_removal.h
--
-pcl/common/io.h
 -
 
 /usr/local/include/pcl-1.9/pcl/filters/impl/voxel_grid.hpp
@@ -1630,12 +1612,6 @@ pcl/common/common.h
 pcl/common/io.h
 -
 pcl/filters/voxel_grid.h
--
-
-/usr/local/include/pcl-1.9/pcl/filters/passthrough.h
-pcl/filters/filter_indices.h
--
-pcl/filters/impl/passthrough.hpp
 -
 
 /usr/local/include/pcl-1.9/pcl/filters/project_inliers.h
@@ -1674,14 +1650,6 @@ pcl/sample_consensus/sac_model_plane.h
 pcl/sample_consensus/sac_model_sphere.h
 -
 pcl/filters/impl/project_inliers.hpp
--
-
-/usr/local/include/pcl-1.9/pcl/filters/radius_outlier_removal.h
-pcl/filters/filter_indices.h
--
-pcl/search/pcl_search.h
--
-pcl/filters/impl/radius_outlier_removal.hpp
 -
 
 /usr/local/include/pcl-1.9/pcl/filters/voxel_grid.h

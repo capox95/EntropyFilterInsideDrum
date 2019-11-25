@@ -1,11 +1,7 @@
 #include <pcl/point_types.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/visualization/cloud_viewer.h>
-#include <pcl/filters/radius_outlier_removal.h>
-#include <pcl/filters/passthrough.h>
-
-#include <chrono>
-#include <ctime>
+#include <pcl/common/time.h>
 
 #include "../include/entropy.h"
 #include "../include/pointpose.h"
@@ -25,6 +21,9 @@ line1: 0, 0.04, 0.06, 0, -0.714004, 0.700142;
 line2: 0, 0.04, 0.06, 0, 0.700142, 0.714004;
 _____________________________________________
 
+Performance:
+sample1 <-> sample5, sample7: processing took less than 1000 ms (uses alternative approach)
+sample6, sample8 <-> sample13: processing took up to 2500ms (sample9), 2000ms (sample8) (connected componets analysis)
 */
 
 int main(int argc, char **argv)
