@@ -41,17 +41,17 @@ void DrumModel::visualizeBasketModel(pcl::PointCloud<pcl::PointNormal>::Ptr &sou
         vizS.addLine(line1_0, line1_1, 1.0f, 0.0f, 0.0f, "line1");
     }
 
-    vizS.addSphere(_maxFinPoint, 0.01, 1.0f, 0.0f, 0.0f, "_maxFinPoint");
-    vizS.addSphere(_minFinPoint, 0.01, 1.0f, 0.0f, 0.0f, "_minFinPoint");
-    vizS.addSphere(_centerFinProjected, 0.01, 1.0f, 1.0f, 0.0f, "_projectedPoint");
+    vizS.addSphere(_maxPaddlePoint, 0.01, 1.0f, 0.0f, 0.0f, "_maxPaddlePoint");
+    vizS.addSphere(_minPaddlePoint, 0.01, 1.0f, 0.0f, 0.0f, "_minPaddlePoint");
+    vizS.addSphere(_centerPaddleProjected, 0.01, 1.0f, 1.0f, 0.0f, "_centerPaddleProjected");
 
-    vizS.addSphere(_centerFinPoint, 0.01, 1.0f, 1.0f, 0.0f, "_centerFinPoint");
-    vizS.addSphere(_centerFin2Point, 0.01, 1.0f, 1.0f, 0.0f, "_centerFin2Point");
-    vizS.addSphere(_centerFin3Point, 0.01, 1.0f, 1.0f, 0.0f, "_centerFin3Point");
+    vizS.addSphere(_centerPaddlePoint, 0.01, 1.0f, 1.0f, 0.0f, "_centerPaddlePoint");
+    vizS.addSphere(_centerPaddle2Point, 0.01, 1.0f, 1.0f, 0.0f, "_centerPaddle2Point");
+    vizS.addSphere(_centerPaddle3Point, 0.01, 1.0f, 1.0f, 0.0f, "_centerPaddle3Point");
 
-    vizS.addSphere(_finsCenter[0], 0.01, 0.0f, 0.0f, 1.0f, "_finsCenter0");
-    vizS.addSphere(_finsCenter[1], 0.01, 0.0f, 0.0f, 1.0f, "_finsCenter1");
-    vizS.addSphere(_finsCenter[2], 0.01, 0.0f, 0.0f, 1.0f, "_finsCenter2");
+    vizS.addSphere(_paddlesCenter[0], 0.01, 0.0f, 0.0f, 1.0f, "_paddlesCenter0");
+    vizS.addSphere(_paddlesCenter[1], 0.01, 0.0f, 0.0f, 1.0f, "_paddlesCenter1");
+    vizS.addSphere(_paddlesCenter[2], 0.01, 0.0f, 0.0f, 1.0f, "_paddlesCenter2");
 
     if (cylinder_flag)
         vizS.addCylinder(_cylinder, "cylinder");
@@ -72,25 +72,36 @@ void DrumModel::compute(pcl::PointCloud<pcl::PointNormal>::Ptr &input)
     _centerPoint.getVector3fMap() = _origin + _axis_dir * _distanceCenter;
 
     // variable made of axis defined with respect center of the drum
-    _lineDrum.values = {_centerPoint.x, _centerPoint.y, _centerPoint.z, _axis.values[3], _axis.values[4], _axis.values[5]};
+    _axisDrum.values = {_centerPoint.x, _centerPoint.y, _centerPoint.z, _axis.values[3], _axis.values[4], _axis.values[5]};
 
+    // work on first paddle to find line and verify that is parallel to axis of drum
     findPlanes(input, _planes);
     estimateIntersactionLine(_planes, _line);
-    getPointsOnLine(input, _line, _maxFinPoint, _minFinPoint, _centerFinPoint);
-    calculateFinHeight(input, _line);
+    checkIfParallel(_line, _axisDrum);
 
-    checkIfParallel(_line, _lineDrum);
+    // calculate center, max, min points on paddle line
+    getPointsOnLine(input, _line, _maxPaddlePoint, _minPaddlePoint, _centerPaddlePoint);
 
     //projection of centerFin point on axis line of drum
-    _centerFinProjected = projection(_centerFinPoint, _lineDrum);
+    _centerPaddleProjected = projection(_centerPaddlePoint, _axisDrum);
 
-    calculateNewPoints(_lineDrum, _centerFinProjected, _centerFinPoint, _centerFin2Point, _centerFin3Point);
+    // check if distance between paddle center and corresponding point on axis is about radius of drum
+    float distance = pcl::euclideanDistance(_centerPaddlePoint, _centerPaddleProjected);
+    std::cout << "distance paddle - drum axis: " << distance << std::endl;
+    if (distance > _radius)
+    {
+        PCL_WARN("distance paddle-drum axis larger than radius of the drum.\n");
+    }
 
-    std::vector<pcl::PointXYZ> P{_centerFinPoint, _centerFin2Point, _centerFin3Point};
-    std::vector<pcl::PointXYZ> R = movePointsToFinsCenter(P, _centerFinProjected, _finHeight);
-    _finsCenter = R;
+    calculatePaddleHeight(input, _line, _paddleHeight);
 
-    _cylinder = buildModelCoefficientCylinder(_centerFinPoint, _centerFinProjected, _axis_dir);
+    calculateNewPoints(_axisDrum, _centerPaddleProjected, _centerPaddlePoint, _centerPaddle2Point, _centerPaddle3Point);
+
+    std::vector<pcl::PointXYZ> Points{_centerPaddlePoint, _centerPaddle2Point, _centerPaddle3Point};
+    _paddlesCenter = movePointsToPaddlesCenter(Points, _centerPaddleProjected, _paddleHeight);
+
+    _cylinder.values = {_centerPoint.x, _centerPoint.y, _centerPoint.z,
+                        _axis_dir.x(), _axis_dir.y(), _axis_dir.z(), distance};
 
     computeTransformation();
 }
@@ -213,8 +224,8 @@ void DrumModel::getPointsOnLine(pcl::PointCloud<pcl::PointNormal>::Ptr &cloud, p
     maxPointProjected.normalize();
     maxPoint.getVector3fMap() = line_point.getVector3fMap() + maxPointProjected * maxP.norm();
 
-    _finLength = pcl::euclideanDistance<pcl::PointXYZ, pcl::PointXYZ>(maxPoint, minPoint);
-    pcl::console::print_highlight("Fin estimated length: %f meters\n", _finLength);
+    _paddleLength = pcl::euclideanDistance<pcl::PointXYZ, pcl::PointXYZ>(maxPoint, minPoint);
+    pcl::console::print_highlight("Fin estimated length: %f meters\n", _paddleLength);
 
     pcl::PointXYZ midPoint;
     midPoint.x = (maxPoint.x + minPoint.x) / 2;
@@ -234,7 +245,7 @@ void DrumModel::getPointsOnLine(pcl::PointCloud<pcl::PointNormal>::Ptr &cloud, p
 }
 
 //to determine if two lines are parallel in 3D
-void DrumModel::checkIfParallel(pcl::ModelCoefficients &line, pcl::ModelCoefficients &axisDrum)
+bool DrumModel::checkIfParallel(pcl::ModelCoefficients &line, pcl::ModelCoefficients &axis)
 {
     // normalizing the vectors to unit length and computing the norm of the cross-product,
     // which is the sine of the angle between them.
@@ -246,25 +257,20 @@ void DrumModel::checkIfParallel(pcl::ModelCoefficients &line, pcl::ModelCoeffici
     vec1.normalize();
 
     Eigen::Vector3f vec2;
-    vec2.x() = axisDrum.values[3];
-    vec2.y() = axisDrum.values[4];
-    vec2.z() = axisDrum.values[5];
+    vec2.x() = axis.values[3];
+    vec2.y() = axis.values[4];
+    vec2.z() = axis.values[5];
     vec2.normalize();
 
     Eigen::Vector3f vecCross = vec1.cross(vec2);
     float norm = vecCross.norm();
     if (abs(asin(norm)) > 0.1)
-        PCL_WARN("Axes are not parallel\n");
-}
+    {
+        PCL_WARN("Axes are not parallel!\n");
+        return false;
+    }
 
-pcl::ModelCoefficients DrumModel::buildModelCoefficientCylinder(pcl::PointXYZ pointFIn, pcl::PointXYZ pointFinProj, Eigen::Vector3f axis)
-{
-    float distance = pcl::euclideanDistance(pointFIn, pointFinProj);
-    std::cout << "distance: " << distance << std::endl;
-    std::vector<float> values{pointFinProj.x, pointFinProj.y, pointFinProj.z, axis.x(), axis.y(), axis.z(), distance};
-    pcl::ModelCoefficients model;
-    model.values = values;
-    return model;
+    return true;
 }
 
 pcl::PointXYZ DrumModel::projection(pcl::PointXYZ &point, pcl::ModelCoefficients &line)
@@ -285,6 +291,14 @@ pcl::PointXYZ DrumModel::projection(pcl::PointXYZ &point, pcl::ModelCoefficients
 
     pcl::PointXYZ projectedPoint;
     projectedPoint.getVector3fMap() = projectedV;
+
+    //check if projected point is near real center of the drum
+    Eigen::Vector3f center = linePoint.getVector3fMap();
+
+    if ((center - projectedV).norm() > 0.1)
+    {
+        PCL_WARN("center drum and projected points not close enough!\n");
+    }
 
     return projectedPoint;
 }
@@ -328,8 +342,10 @@ void DrumModel::calculateNewPoints(pcl::ModelCoefficients &cylinder, pcl::PointX
     centerFin3 = newPoints[1];
 }
 
-std::vector<pcl::PointXYZ> DrumModel::movePointsToFinsCenter(std::vector<pcl::PointXYZ> &points, pcl::PointXYZ &center, float distance)
+std::vector<pcl::PointXYZ> DrumModel::movePointsToPaddlesCenter(std::vector<pcl::PointXYZ> &points, pcl::PointXYZ &center, float height)
 {
+    float distance = 0.5 * height;
+
     std::vector<pcl::PointXYZ> result;
     for (int i = 0; i < points.size(); i++)
     {
@@ -346,7 +362,7 @@ std::vector<pcl::PointXYZ> DrumModel::movePointsToFinsCenter(std::vector<pcl::Po
     return result;
 }
 
-float DrumModel::calculateFinHeight(pcl::PointCloud<pcl::PointNormal>::Ptr &input, pcl::ModelCoefficients &line)
+float DrumModel::calculatePaddleHeight(pcl::PointCloud<pcl::PointNormal>::Ptr &input, pcl::ModelCoefficients &line, float &height)
 {
     std::vector<float> distances;
     float tmp;
@@ -362,14 +378,14 @@ float DrumModel::calculateFinHeight(pcl::PointCloud<pcl::PointNormal>::Ptr &inpu
     }
 
     double max = *std::max_element(distances.begin(), distances.end());
-    _finHeight = sqrt(max) / 2;
+    height = sqrt(max);
 
-    pcl::console::print_highlight("Fin estimated height: %f meters\n", _finHeight * 2);
+    pcl::console::print_highlight("Fin estimated height: %f meters\n", height);
 }
 
 void DrumModel::computeTransformation()
 {
-    Eigen::Vector3f axis2 = _centerFinPoint.getVector3fMap() - _centerFinProjected.getVector3fMap();
+    Eigen::Vector3f axis2 = _centerPaddlePoint.getVector3fMap() - _centerPaddleProjected.getVector3fMap();
     axis2.normalize();
 
     Eigen::Vector3f axis1 = _axis_dir;
@@ -386,10 +402,10 @@ void DrumModel::computeTransformation()
     from_line_x << 0, 0, 0, 1, 0, 0;
     from_line_z << 0, 0, 0, 0, 0, 1;
 
-    to_line_x.head<3>() = _centerFinProjected.getVector3fMap().cast<double>();
+    to_line_x.head<3>() = _centerPaddleProjected.getVector3fMap().cast<double>();
     to_line_x.tail<3>() = axis2.cast<double>();
 
-    to_line_z.head<3>() = _centerFinProjected.getVector3fMap().cast<double>();
+    to_line_z.head<3>() = _centerPaddleProjected.getVector3fMap().cast<double>();
     to_line_z.tail<3>() = axis1.cast<double>();
 
     Eigen::Affine3d transformation;
@@ -410,15 +426,15 @@ void DrumModel::computeTransformation()
 
     // small cylinder 0
     _tSmall0.linear() = transformation.linear();
-    _tSmall0.translation() = _finsCenter[0].getVector3fMap().cast<double>();
+    _tSmall0.translation() = _paddlesCenter[0].getVector3fMap().cast<double>();
 
     // small cylinder 1
     _tSmall1.linear() = transformation.linear();
-    _tSmall1.translation() = _finsCenter[1].getVector3fMap().cast<double>();
+    _tSmall1.translation() = _paddlesCenter[1].getVector3fMap().cast<double>();
 
     // small cylinder 2
     _tSmall2.linear() = transformation.linear();
-    _tSmall2.translation() = _finsCenter[2].getVector3fMap().cast<double>();
+    _tSmall2.translation() = _paddlesCenter[2].getVector3fMap().cast<double>();
 }
 
 //--------------------------------------

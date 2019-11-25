@@ -17,24 +17,21 @@
 class DrumModel
 {
 public:
-    Eigen::Vector3f _basketCenter;
-    Eigen::Vector3f _basketAxisVector;
-
-    pcl::PointXYZ _maxFinPoint, _minFinPoint, _centerFinPoint, _centerFinProjected;
-    pcl::PointXYZ _centerFin2Point, _centerFin3Point;
-    std::vector<pcl::PointXYZ> _finsCenter;
+    pcl::PointXYZ _maxPaddlePoint, _minPaddlePoint, _centerPaddleProjected;
+    pcl::PointXYZ _centerPaddlePoint, _centerPaddle2Point, _centerPaddle3Point;
+    std::vector<pcl::PointXYZ> _paddlesCenter;
 
     std::vector<pcl::ModelCoefficients> _planes;
-    pcl::ModelCoefficients _line, _lineBasket, _cylinder;
+    pcl::ModelCoefficients _line, _cylinder;
 
     Eigen::Affine3d _tBig, _tSmall0, _tSmall1, _tSmall2;
 
-    pcl::ModelCoefficients _axis, _lineDrum;
+    pcl::ModelCoefficients _axis, _axisDrum;
     float _radius, _distanceCenter;
     pcl::PointXYZ _centerPoint;
     Eigen::Vector3f _origin, _axis_dir;
 
-    float _finLength, _finHeight;
+    float _paddleLength, _paddleHeight;
 
 public:
     void setDrumAxis(Eigen::Vector3f &axis_pt, Eigen::Vector3f &axis_dir);
@@ -59,7 +56,7 @@ public:
     void getPointsOnLine(pcl::PointCloud<pcl::PointNormal>::Ptr &cloud, pcl::ModelCoefficients &line,
                          pcl::PointXYZ &maxFinPoint, pcl::PointXYZ &minFinPoint, pcl::PointXYZ &centerFinPoint);
 
-    void checkIfParallel(pcl::ModelCoefficients &line, pcl::ModelCoefficients &axisBasket);
+    bool checkIfParallel(pcl::ModelCoefficients &line, pcl::ModelCoefficients &axis);
 
     void buildLineModelCoefficient(Eigen::Vector3f &point, Eigen::Vector3f &axis, pcl::ModelCoefficients &_lineBasket);
 
@@ -68,11 +65,11 @@ public:
     void calculateNewPoints(pcl::ModelCoefficients &cylinder, pcl::PointXYZ &centerCylinder,
                             pcl::PointXYZ &centerFin1, pcl::PointXYZ &centerFin2, pcl::PointXYZ &centerFin3);
 
-    std::vector<pcl::PointXYZ> movePointsToFinsCenter(std::vector<pcl::PointXYZ> &points, pcl::PointXYZ &center, float distance);
+    std::vector<pcl::PointXYZ> movePointsToPaddlesCenter(std::vector<pcl::PointXYZ> &points, pcl::PointXYZ &center, float height);
 
     pcl::ModelCoefficients buildModelCoefficientCylinder(pcl::PointXYZ pointFIn, pcl::PointXYZ pointFinProj, Eigen::Vector3f axis);
 
-    float calculateFinHeight(pcl::PointCloud<pcl::PointNormal>::Ptr &input, pcl::ModelCoefficients &line);
+    float calculatePaddleHeight(pcl::PointCloud<pcl::PointNormal>::Ptr &input, pcl::ModelCoefficients &line, float &height);
 
     void computeTransformation();
 
