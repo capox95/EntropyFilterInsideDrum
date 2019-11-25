@@ -14,40 +14,41 @@
 #include <pcl/filters/extract_indices.h>
 #include <pcl/visualization/pcl_visualizer.h>
 
+typedef std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d>> Affine3dVector;
+
 class DrumModel
 {
 public:
+    pcl::PointCloud<pcl::PointNormal>::Ptr _input;
+
     pcl::PointXYZ _maxPaddlePoint, _minPaddlePoint, _centerPaddleProjected;
-    pcl::PointXYZ _centerPaddlePoint, _centerPaddle2Point, _centerPaddle3Point;
+    pcl::PointXYZ _centerPaddlePoint, _centerPaddle2Point, _centerPaddle3Point, _centerPoint;
     std::vector<pcl::PointXYZ> _paddlesCenter;
 
     std::vector<pcl::ModelCoefficients> _planes;
-    pcl::ModelCoefficients _line, _cylinder;
+    pcl::ModelCoefficients _line, _cylinder, _axis, _axisDrum;
 
-    Eigen::Affine3d _tBig, _tSmall0, _tSmall1, _tSmall2;
-
-    pcl::ModelCoefficients _axis, _axisDrum;
-    float _radius, _distanceCenter;
-    pcl::PointXYZ _centerPoint;
     Eigen::Vector3f _origin, _axis_dir;
 
-    float _paddleLength, _paddleHeight;
+    float _paddleLength, _paddleHeight, _radius, _distanceCenter;
 
 public:
+    DrumModel() : _input(new pcl::PointCloud<pcl::PointNormal>)
+    {
+    }
+
+    void setInputCloud(pcl::PointCloud<pcl::PointNormal>::Ptr &input);
+
     void setDrumAxis(Eigen::Vector3f &axis_pt, Eigen::Vector3f &axis_dir);
 
     void setDrumCenterDistance(float distance);
 
     void setDrumRadius(float radius);
 
-    Eigen::Affine3d getSmallgMatrix0();
-    Eigen::Affine3d getSmallgMatrix1();
-    Eigen::Affine3d getSmallgMatrix2();
+    void visualize(pcl::PointCloud<pcl::PointNormal>::Ptr &scene, bool planes_flag = false,
+                   bool cylinder_flag = false, bool lines_flag = false);
 
-    void visualizeBasketModel(pcl::PointCloud<pcl::PointNormal>::Ptr &source,
-                              bool planes_flag, bool cylinder_flag, bool lines_flag);
-
-    void compute(pcl::PointCloud<pcl::PointNormal>::Ptr &input);
+    void compute(Affine3dVector &transformation_matrix_vector);
 
     void findPlanes(pcl::PointCloud<pcl::PointNormal>::Ptr &cloud_plane, std::vector<pcl::ModelCoefficients> &planes);
 
@@ -58,8 +59,6 @@ public:
 
     bool checkIfParallel(pcl::ModelCoefficients &line, pcl::ModelCoefficients &axis);
 
-    void buildLineModelCoefficient(Eigen::Vector3f &point, Eigen::Vector3f &axis, pcl::ModelCoefficients &_lineBasket);
-
     pcl::PointXYZ projection(pcl::PointXYZ &point, pcl::ModelCoefficients &line);
 
     void calculateNewPoints(pcl::ModelCoefficients &cylinder, pcl::PointXYZ &centerCylinder,
@@ -67,12 +66,10 @@ public:
 
     std::vector<pcl::PointXYZ> movePointsToPaddlesCenter(std::vector<pcl::PointXYZ> &points, pcl::PointXYZ &center, float height);
 
-    pcl::ModelCoefficients buildModelCoefficientCylinder(pcl::PointXYZ pointFIn, pcl::PointXYZ pointFinProj, Eigen::Vector3f axis);
-
     float calculatePaddleHeight(pcl::PointCloud<pcl::PointNormal>::Ptr &input, pcl::ModelCoefficients &line, float &height);
 
-    void computeTransformation();
+    void computeTransformation(Affine3dVector &transformation_matrix_vector);
 
-    void computeDrumAxes(pcl::ModelCoefficients &line1, pcl::ModelCoefficients &line2);
-    void transformation(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_out);
+    //void computeDrumAxes(pcl::ModelCoefficients &line1, pcl::ModelCoefficients &line2);
+    //void transformation(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_out);
 };

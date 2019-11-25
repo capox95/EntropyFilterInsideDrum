@@ -1,6 +1,8 @@
 #include "../include/drumModel.h"
 
 // INPUT
+void DrumModel::setInputCloud(pcl::PointCloud<pcl::PointNormal>::Ptr &input) { _input = input; }
+
 void DrumModel::setDrumAxis(Eigen::Vector3f &axis_pt, Eigen::Vector3f &axis_dir)
 {
     _axis.values = {axis_pt.x(), axis_pt.y(), axis_pt.z(), axis_dir.x(), axis_dir.y(), axis_dir.z()};
@@ -10,19 +12,14 @@ void DrumModel::setDrumCenterDistance(float distance) { _distanceCenter = distan
 
 void DrumModel::setDrumRadius(float radius) { _radius = radius; }
 
-// OUTPUT
-Eigen::Affine3d DrumModel::getSmallgMatrix0() { return _tSmall0; }
-Eigen::Affine3d DrumModel::getSmallgMatrix1() { return _tSmall1; }
-Eigen::Affine3d DrumModel::getSmallgMatrix2() { return _tSmall2; }
-
-void DrumModel::visualizeBasketModel(pcl::PointCloud<pcl::PointNormal>::Ptr &source,
-                                     bool planes_flag, bool cylinder_flag, bool lines_flag)
+void DrumModel::visualize(pcl::PointCloud<pcl::PointNormal>::Ptr &scene,
+                          bool planes_flag, bool cylinder_flag, bool lines_flag)
 {
     // Visualization
     pcl::visualization::PCLVisualizer vizS("PCL");
     vizS.addCoordinateSystem(0.1, "coordinate");
     vizS.setBackgroundColor(1.0, 1.0, 1.0);
-    vizS.addPointCloud<pcl::PointNormal>(source, "source");
+    vizS.addPointCloud<pcl::PointNormal>(scene, "source");
     vizS.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_COLOR, 0.0, 0.7, 0.0, "source");
 
     if (planes_flag)
@@ -59,7 +56,7 @@ void DrumModel::visualizeBasketModel(pcl::PointCloud<pcl::PointNormal>::Ptr &sou
     vizS.spin();
 }
 
-void DrumModel::compute(pcl::PointCloud<pcl::PointNormal>::Ptr &input)
+void DrumModel::compute(Affine3dVector &transformation_matrix_vector)
 {
     // --------------------------------------
     //pcl::ModelCoefficients line1, line2;
@@ -75,12 +72,12 @@ void DrumModel::compute(pcl::PointCloud<pcl::PointNormal>::Ptr &input)
     _axisDrum.values = {_centerPoint.x, _centerPoint.y, _centerPoint.z, _axis.values[3], _axis.values[4], _axis.values[5]};
 
     // work on first paddle to find line and verify that is parallel to axis of drum
-    findPlanes(input, _planes);
+    findPlanes(_input, _planes);
     estimateIntersactionLine(_planes, _line);
     checkIfParallel(_line, _axisDrum);
 
     // calculate center, max, min points on paddle line
-    getPointsOnLine(input, _line, _maxPaddlePoint, _minPaddlePoint, _centerPaddlePoint);
+    getPointsOnLine(_input, _line, _maxPaddlePoint, _minPaddlePoint, _centerPaddlePoint);
 
     //projection of centerFin point on axis line of drum
     _centerPaddleProjected = projection(_centerPaddlePoint, _axisDrum);
@@ -93,7 +90,7 @@ void DrumModel::compute(pcl::PointCloud<pcl::PointNormal>::Ptr &input)
         PCL_WARN("distance paddle-drum axis larger than radius of the drum.\n");
     }
 
-    calculatePaddleHeight(input, _line, _paddleHeight);
+    calculatePaddleHeight(_input, _line, _paddleHeight);
 
     calculateNewPoints(_axisDrum, _centerPaddleProjected, _centerPaddlePoint, _centerPaddle2Point, _centerPaddle3Point);
 
@@ -103,7 +100,7 @@ void DrumModel::compute(pcl::PointCloud<pcl::PointNormal>::Ptr &input)
     _cylinder.values = {_centerPoint.x, _centerPoint.y, _centerPoint.z,
                         _axis_dir.x(), _axis_dir.y(), _axis_dir.z(), distance};
 
-    computeTransformation();
+    computeTransformation(transformation_matrix_vector);
 }
 
 // estimate the planes for the two surfaces of the fin model.
@@ -383,7 +380,7 @@ float DrumModel::calculatePaddleHeight(pcl::PointCloud<pcl::PointNormal>::Ptr &i
     pcl::console::print_highlight("Fin estimated height: %f meters\n", height);
 }
 
-void DrumModel::computeTransformation()
+void DrumModel::computeTransformation(Affine3dVector &transformation_matrix_vector)
 {
     Eigen::Vector3f axis2 = _centerPaddlePoint.getVector3fMap() - _centerPaddleProjected.getVector3fMap();
     axis2.normalize();
@@ -409,35 +406,22 @@ void DrumModel::computeTransformation()
     to_line_z.tail<3>() = axis1.cast<double>();
 
     Eigen::Affine3d transformation;
-    if (pcl::transformBetween2CoordinateSystems(from_line_x, from_line_z, to_line_x, to_line_z, transformation))
-    {
-        //std::cout << "Transformation matrix: \n"
-        //          << transformation.matrix() << std::endl;
-    }
-    else
-    {
+    if (!(pcl::transformBetween2CoordinateSystems(from_line_x, from_line_z, to_line_x, to_line_z, transformation)))
         std::cout << "error computing affine transform" << std::endl;
+
+    // each cylinder (paddle) is defined by its own affine transformation matrix
+    Eigen::Affine3d tmp;
+    tmp.linear() = transformation.linear();
+
+    for (int i = 0; i < _paddlesCenter.size(); i++)
+    {
+        tmp.translation() = _paddlesCenter[i].getVector3fMap().cast<double>();
+        transformation_matrix_vector.push_back(tmp);
     }
-
-    // each cylinder is defined by its own affine transformation matrix. It is easly transformed into a pose_msg in ROS
-
-    // big cylinder
-    _tBig = transformation;
-
-    // small cylinder 0
-    _tSmall0.linear() = transformation.linear();
-    _tSmall0.translation() = _paddlesCenter[0].getVector3fMap().cast<double>();
-
-    // small cylinder 1
-    _tSmall1.linear() = transformation.linear();
-    _tSmall1.translation() = _paddlesCenter[1].getVector3fMap().cast<double>();
-
-    // small cylinder 2
-    _tSmall2.linear() = transformation.linear();
-    _tSmall2.translation() = _paddlesCenter[2].getVector3fMap().cast<double>();
 }
 
 //--------------------------------------
+/*
 void DrumModel::computeDrumAxes(pcl::ModelCoefficients &line1, pcl::ModelCoefficients &line2)
 {
 
@@ -493,14 +477,14 @@ void DrumModel::computeDrumAxes(pcl::ModelCoefficients &line1, pcl::ModelCoeffic
     seg.segment(*inliers, line2);
 
     // origin
-    /*
-    line1.values[0] = 0;
-    line1.values[1] = 0.09;
-    line1.values[2] = 0.11;
-    line2.values[0] = 0;
-    line2.values[1] = 0.09;
-    line2.values[2] = 0.11;
-    */
+    
+    //line1.values[0] = 0;
+    //line1.values[1] = 0.09;
+    //line1.values[2] = 0.11;
+    //line2.values[0] = 0;
+    //line2.values[1] = 0.09;
+    //line2.values[2] = 0.11;
+    
 
     std::cout << "axis computed: -------------------------" << std::endl;
     for (int i = 0; i < line1.values.size(); i++)
@@ -515,7 +499,7 @@ void DrumModel::computeDrumAxes(pcl::ModelCoefficients &line1, pcl::ModelCoeffic
     }
     std::cout << std::endl;
     std::cout << "-------------------------" << std::endl;
-}
+    }
 
 void DrumModel::transformation(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud_out)
 {
@@ -526,3 +510,5 @@ void DrumModel::transformation(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, pcl::
     transform.rotate(Eigen::AngleAxisf(theta, Eigen::Vector3f::UnitX()));
     pcl::transformPointCloud(*cloud, *cloud_out, transform);
 }
+
+*/

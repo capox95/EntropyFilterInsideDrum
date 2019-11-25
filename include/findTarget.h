@@ -49,5 +49,5 @@ public:
 
     bool compute();
 
-    void visualize(bool spinFlag = true);
+    void visualize(bool spinFlag = false);
 };

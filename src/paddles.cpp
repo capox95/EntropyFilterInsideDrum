@@ -7,6 +7,11 @@
 #include "../include/findTarget.h"
 #include "../include/drumModel.h"
 
+/*
+for dataset with samples paddle1.pcd <-> paddle9.pcd
+processing time btw ~800 ms up to almost 3000 ms for difficult samples (paddle7 and paddle9)
+*/
+
 // Types
 typedef pcl::PointNormal PointNT;
 typedef pcl::PointCloud<PointNT> PointCloudT;
@@ -26,6 +31,7 @@ int main(int argc, char **argv)
     // Point clouds
     PointCloudT::Ptr object(new PointCloudT);
     PointCloudT::Ptr scene(new PointCloudT);
+    PointCloudT::Ptr object_result(new PointCloudT);
 
     // Get input object and scene
     if (argc != 3)
@@ -42,40 +48,29 @@ int main(int argc, char **argv)
         pcl::console::print_error("Error loading object/scene file!\n");
         return (1);
     }
-
     FindTarget ft;
     ft.object = object;
     ft.scene = scene;
     bool success = ft.compute();
     if (!success)
         return -1;
-    ft.visualize(false);
+
+    object_result = ft.object_icp;
 
     DrumModel dm;
+    dm.setInputCloud(object_result);
     dm.setDrumAxis(axis_pt, axis_dir);
     dm.setDrumCenterDistance(drumCenterDistance);
     dm.setDrumRadius(drumRadius);
 
-    dm.compute(ft.object_icp);
+    std::vector<Eigen::Affine3d, Eigen::aligned_allocator<Eigen::Affine3d>> transformation_vector;
+    dm.compute(transformation_vector);
 
-    /*
-    Eigen::Affine3d tS0 = dm.getSmallgMatrix0();
-    Eigen::Affine3d tS1 = dm.getSmallgMatrix1();
-    Eigen::Affine3d tS2 = dm.getSmallgMatrix2();
+    for (int i = 0; i < transformation_vector.size(); i++)
+        std::cout << transformation_vector[i].matrix() << std::endl;
 
-    std::cout << "smallMatrix0: \n"
-              << tS0.matrix() << "\n"
-              << std::endl;
-    std::cout << "smallMatrix2: \n"
-              << tS1.matrix() << "\n"
-              << std::endl;
-    std::cout << "smallMatrix3:  \n"
-              << tS2.matrix() << "\n"
-              << std::endl;
-
-              */
-
-    dm.visualizeBasketModel(scene, false, false, false);
+    ft.visualize();
+    dm.visualize(scene);
 
     return (0);
 }
