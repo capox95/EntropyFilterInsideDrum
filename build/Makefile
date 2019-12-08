@@ -111,17 +111,17 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named EntropyFilter
+# Target rules for targets named InsideDrum
 
 # Build rule for target.
-EntropyFilter: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 EntropyFilter
-.PHONY : EntropyFilter
+InsideDrum: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 InsideDrum
+.PHONY : InsideDrum
 
 # fast build rule for target.
-EntropyFilter/fast:
-	$(MAKE) -f CMakeFiles/EntropyFilter.dir/build.make CMakeFiles/EntropyFilter.dir/build
-.PHONY : EntropyFilter/fast
+InsideDrum/fast:
+	$(MAKE) -f CMakeFiles/InsideDrum.dir/build.make CMakeFiles/InsideDrum.dir/build
+.PHONY : InsideDrum/fast
 
 #=============================================================================
 # Target rules for targets named Paddles
@@ -169,7 +169,7 @@ src/entropy.o: src/entropy.cpp.o
 
 # target to build an object file
 src/entropy.cpp.o:
-	$(MAKE) -f CMakeFiles/EntropyFilter.dir/build.make CMakeFiles/EntropyFilter.dir/src/entropy.cpp.o
+	$(MAKE) -f CMakeFiles/InsideDrum.dir/build.make CMakeFiles/InsideDrum.dir/src/entropy.cpp.o
 .PHONY : src/entropy.cpp.o
 
 src/entropy.i: src/entropy.cpp.i
@@ -178,7 +178,7 @@ src/entropy.i: src/entropy.cpp.i
 
 # target to preprocess a source file
 src/entropy.cpp.i:
-	$(MAKE) -f CMakeFiles/EntropyFilter.dir/build.make CMakeFiles/EntropyFilter.dir/src/entropy.cpp.i
+	$(MAKE) -f CMakeFiles/InsideDrum.dir/build.make CMakeFiles/InsideDrum.dir/src/entropy.cpp.i
 .PHONY : src/entropy.cpp.i
 
 src/entropy.s: src/entropy.cpp.s
@@ -187,7 +187,7 @@ src/entropy.s: src/entropy.cpp.s
 
 # target to generate assembly for a file
 src/entropy.cpp.s:
-	$(MAKE) -f CMakeFiles/EntropyFilter.dir/build.make CMakeFiles/EntropyFilter.dir/src/entropy.cpp.s
+	$(MAKE) -f CMakeFiles/InsideDrum.dir/build.make CMakeFiles/InsideDrum.dir/src/entropy.cpp.s
 .PHONY : src/entropy.cpp.s
 
 src/findTarget.o: src/findTarget.cpp.o
@@ -217,32 +217,32 @@ src/findTarget.cpp.s:
 	$(MAKE) -f CMakeFiles/Paddles.dir/build.make CMakeFiles/Paddles.dir/src/findTarget.cpp.s
 .PHONY : src/findTarget.cpp.s
 
-src/main.o: src/main.cpp.o
+src/inside_drum.o: src/inside_drum.cpp.o
 
-.PHONY : src/main.o
+.PHONY : src/inside_drum.o
 
 # target to build an object file
-src/main.cpp.o:
-	$(MAKE) -f CMakeFiles/EntropyFilter.dir/build.make CMakeFiles/EntropyFilter.dir/src/main.cpp.o
-.PHONY : src/main.cpp.o
+src/inside_drum.cpp.o:
+	$(MAKE) -f CMakeFiles/InsideDrum.dir/build.make CMakeFiles/InsideDrum.dir/src/inside_drum.cpp.o
+.PHONY : src/inside_drum.cpp.o
 
-src/main.i: src/main.cpp.i
+src/inside_drum.i: src/inside_drum.cpp.i
 
-.PHONY : src/main.i
+.PHONY : src/inside_drum.i
 
 # target to preprocess a source file
-src/main.cpp.i:
-	$(MAKE) -f CMakeFiles/EntropyFilter.dir/build.make CMakeFiles/EntropyFilter.dir/src/main.cpp.i
-.PHONY : src/main.cpp.i
+src/inside_drum.cpp.i:
+	$(MAKE) -f CMakeFiles/InsideDrum.dir/build.make CMakeFiles/InsideDrum.dir/src/inside_drum.cpp.i
+.PHONY : src/inside_drum.cpp.i
 
-src/main.s: src/main.cpp.s
+src/inside_drum.s: src/inside_drum.cpp.s
 
-.PHONY : src/main.s
+.PHONY : src/inside_drum.s
 
 # target to generate assembly for a file
-src/main.cpp.s:
-	$(MAKE) -f CMakeFiles/EntropyFilter.dir/build.make CMakeFiles/EntropyFilter.dir/src/main.cpp.s
-.PHONY : src/main.cpp.s
+src/inside_drum.cpp.s:
+	$(MAKE) -f CMakeFiles/InsideDrum.dir/build.make CMakeFiles/InsideDrum.dir/src/inside_drum.cpp.s
+.PHONY : src/inside_drum.cpp.s
 
 src/paddles.o: src/paddles.cpp.o
 
@@ -277,7 +277,7 @@ src/pointpose.o: src/pointpose.cpp.o
 
 # target to build an object file
 src/pointpose.cpp.o:
-	$(MAKE) -f CMakeFiles/EntropyFilter.dir/build.make CMakeFiles/EntropyFilter.dir/src/pointpose.cpp.o
+	$(MAKE) -f CMakeFiles/InsideDrum.dir/build.make CMakeFiles/InsideDrum.dir/src/pointpose.cpp.o
 .PHONY : src/pointpose.cpp.o
 
 src/pointpose.i: src/pointpose.cpp.i
@@ -286,7 +286,7 @@ src/pointpose.i: src/pointpose.cpp.i
 
 # target to preprocess a source file
 src/pointpose.cpp.i:
-	$(MAKE) -f CMakeFiles/EntropyFilter.dir/build.make CMakeFiles/EntropyFilter.dir/src/pointpose.cpp.i
+	$(MAKE) -f CMakeFiles/InsideDrum.dir/build.make CMakeFiles/InsideDrum.dir/src/pointpose.cpp.i
 .PHONY : src/pointpose.cpp.i
 
 src/pointpose.s: src/pointpose.cpp.s
@@ -295,7 +295,7 @@ src/pointpose.s: src/pointpose.cpp.s
 
 # target to generate assembly for a file
 src/pointpose.cpp.s:
-	$(MAKE) -f CMakeFiles/EntropyFilter.dir/build.make CMakeFiles/EntropyFilter.dir/src/pointpose.cpp.s
+	$(MAKE) -f CMakeFiles/InsideDrum.dir/build.make CMakeFiles/InsideDrum.dir/src/pointpose.cpp.s
 .PHONY : src/pointpose.cpp.s
 
 src/segmentation.o: src/segmentation.cpp.o
@@ -304,7 +304,7 @@ src/segmentation.o: src/segmentation.cpp.o
 
 # target to build an object file
 src/segmentation.cpp.o:
-	$(MAKE) -f CMakeFiles/EntropyFilter.dir/build.make CMakeFiles/EntropyFilter.dir/src/segmentation.cpp.o
+	$(MAKE) -f CMakeFiles/InsideDrum.dir/build.make CMakeFiles/InsideDrum.dir/src/segmentation.cpp.o
 .PHONY : src/segmentation.cpp.o
 
 src/segmentation.i: src/segmentation.cpp.i
@@ -313,7 +313,7 @@ src/segmentation.i: src/segmentation.cpp.i
 
 # target to preprocess a source file
 src/segmentation.cpp.i:
-	$(MAKE) -f CMakeFiles/EntropyFilter.dir/build.make CMakeFiles/EntropyFilter.dir/src/segmentation.cpp.i
+	$(MAKE) -f CMakeFiles/InsideDrum.dir/build.make CMakeFiles/InsideDrum.dir/src/segmentation.cpp.i
 .PHONY : src/segmentation.cpp.i
 
 src/segmentation.s: src/segmentation.cpp.s
@@ -322,7 +322,7 @@ src/segmentation.s: src/segmentation.cpp.s
 
 # target to generate assembly for a file
 src/segmentation.cpp.s:
-	$(MAKE) -f CMakeFiles/EntropyFilter.dir/build.make CMakeFiles/EntropyFilter.dir/src/segmentation.cpp.s
+	$(MAKE) -f CMakeFiles/InsideDrum.dir/build.make CMakeFiles/InsideDrum.dir/src/segmentation.cpp.s
 .PHONY : src/segmentation.cpp.s
 
 # Help Target
@@ -332,8 +332,8 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... rebuild_cache"
+	@echo "... InsideDrum"
 	@echo "... edit_cache"
-	@echo "... EntropyFilter"
 	@echo "... Paddles"
 	@echo "... src/drumModel.o"
 	@echo "... src/drumModel.i"
@@ -344,9 +344,9 @@ help:
 	@echo "... src/findTarget.o"
 	@echo "... src/findTarget.i"
 	@echo "... src/findTarget.s"
-	@echo "... src/main.o"
-	@echo "... src/main.i"
-	@echo "... src/main.s"
+	@echo "... src/inside_drum.o"
+	@echo "... src/inside_drum.i"
+	@echo "... src/inside_drum.s"
 	@echo "... src/paddles.o"
 	@echo "... src/paddles.i"
 	@echo "... src/paddles.s"

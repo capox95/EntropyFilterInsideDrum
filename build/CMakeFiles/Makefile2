@@ -60,39 +60,39 @@ CMAKE_SOURCE_DIR = /home/alessio/dev/EntropyInside
 CMAKE_BINARY_DIR = /home/alessio/dev/EntropyInside/build
 
 #=============================================================================
-# Target rules for target CMakeFiles/EntropyFilter.dir
+# Target rules for target CMakeFiles/InsideDrum.dir
 
 # All Build rule for target.
-CMakeFiles/EntropyFilter.dir/all:
-	$(MAKE) -f CMakeFiles/EntropyFilter.dir/build.make CMakeFiles/EntropyFilter.dir/depend
-	$(MAKE) -f CMakeFiles/EntropyFilter.dir/build.make CMakeFiles/EntropyFilter.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/alessio/dev/EntropyInside/build/CMakeFiles --progress-num=1,2,3,4,5 "Built target EntropyFilter"
-.PHONY : CMakeFiles/EntropyFilter.dir/all
+CMakeFiles/InsideDrum.dir/all:
+	$(MAKE) -f CMakeFiles/InsideDrum.dir/build.make CMakeFiles/InsideDrum.dir/depend
+	$(MAKE) -f CMakeFiles/InsideDrum.dir/build.make CMakeFiles/InsideDrum.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/alessio/dev/EntropyInside/build/CMakeFiles --progress-num=1,2,3,4,5 "Built target InsideDrum"
+.PHONY : CMakeFiles/InsideDrum.dir/all
 
 # Include target in all.
-all: CMakeFiles/EntropyFilter.dir/all
+all: CMakeFiles/InsideDrum.dir/all
 
 .PHONY : all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/EntropyFilter.dir/rule: cmake_check_build_system
+CMakeFiles/InsideDrum.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/alessio/dev/EntropyInside/build/CMakeFiles 5
-	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/EntropyFilter.dir/all
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/InsideDrum.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/alessio/dev/EntropyInside/build/CMakeFiles 0
-.PHONY : CMakeFiles/EntropyFilter.dir/rule
+.PHONY : CMakeFiles/InsideDrum.dir/rule
 
 # Convenience name for target.
-EntropyFilter: CMakeFiles/EntropyFilter.dir/rule
+InsideDrum: CMakeFiles/InsideDrum.dir/rule
 
-.PHONY : EntropyFilter
-
-# clean rule for target.
-CMakeFiles/EntropyFilter.dir/clean:
-	$(MAKE) -f CMakeFiles/EntropyFilter.dir/build.make CMakeFiles/EntropyFilter.dir/clean
-.PHONY : CMakeFiles/EntropyFilter.dir/clean
+.PHONY : InsideDrum
 
 # clean rule for target.
-clean: CMakeFiles/EntropyFilter.dir/clean
+CMakeFiles/InsideDrum.dir/clean:
+	$(MAKE) -f CMakeFiles/InsideDrum.dir/build.make CMakeFiles/InsideDrum.dir/clean
+.PHONY : CMakeFiles/InsideDrum.dir/clean
+
+# clean rule for target.
+clean: CMakeFiles/InsideDrum.dir/clean
 
 .PHONY : clean
 
